@@ -98,6 +98,10 @@ public:
     std::vector<SMenuItem> PickerItems;
     int     PickerDialogType;
 
+    // Per-layer 3D: SNES layer (0-3 = BG1-BG4, 4 = sprites) this row adjusts, or -1.
+    // While such a row is selected the top screen can show only that layer.
+    int     HighlightLayer = -1;
+
 protected:
     std::function<void(int)> ValueChangedCallback;
 

@@ -20,13 +20,18 @@ Open the emulator menu, **Settings** tab, section **3D Layer Depth (this game)**
 - **Auto**: works out the depths while you play. It measures how fast each background
   layer scrolls: the fastest layer is the play field, slower layers are farther away, a layer that
   never scrolls is the HUD (BG3) or a fixed backdrop. On screens where nothing scrolls (title
-  screens, menus, name entry) it fades to flat, and depth fades back in once layers scroll.
-  If you stand still in a game for about 40 seconds the depth fades out until you move.
+  screens, menus, name entry) it uses the Recommended depths (below), and moves to its own estimate
+  once layers scroll. If you stand still in a game for about 40 seconds it drifts back to the Recommended depths.
 - **Recommended** (default): fixed depths. Games in the built-in list (by ROM CRC32, currently ActRaiser USA)
   use depths checked by hand; every other game gets a general preset
   (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0).
 - **Manual**: set a depth (-8..8) for BG1, BG2, BG3, BG4 and Sprites (OBJ). Positive = toward you,
-  negative = away. Switching to Manual starts from the depths that were in use.
+  negative = away. Switching to Manual starts from the depths that were in use. Each slider is labelled with
+  what its layer usually holds (BG1 main layer, BG2 back layer, BG3 HUD / text, BG4 extra, Sprites characters),
+  but games differ. With **Show Only Selected Layer** checked (default, not saved), the top screen shows just the
+  layer whose slider is selected, in a strong colour so it is easy to tell apart (BG1 red, BG2 blue, BG3 yellow,
+  BG4 pink, Sprites green; the colour is named on each slider), and moving the slider previews the new depth live. Uncheck it to see all layers together.
+  **Reset Depths to Recommended** puts the five sliders back to the depths Recommended mode uses for this game.
 
 Example Manual depths for ActRaiser action stages: BG1 -1, BG2 -4, BG3 +3, BG4 -2, Sprites 0
 (BG1 trees/grass, BG2 far background, BG3 HUD/pause text).
@@ -42,8 +47,8 @@ Open **Emulator** tab, **ROM Info**, note the CRC32. Add a line to `stereoGameTa
   layer use, can look wrong. Switch to Manual for those.
 - Mode 7 scenes get no receding depth (BG1's shift at most). Super Mario Kart and F-Zero stay mostly flat.
 - All sprites share one depth. Window/clip masks are not shifted; no per-priority depth within a layer.
-- Shifted layers can leave a thin empty strip at the screen edges. A fix that crops the
-  picture by the widest layer shift was written but never run on hardware, so it is not included.
+- Shifted layers leave a thin empty strip at the screen edges. The picture is cropped slightly at the left
+  and right by the widest layer shift to hide it, so a game with large depths shows a little less at the sides.
 
 ## Building a CIA
 The CIA uses its own title ID and name ("Snes9x 3DS Layers") so it installs next to the original Snes9x 3DS

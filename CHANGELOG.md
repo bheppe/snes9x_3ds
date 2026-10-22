@@ -1,6 +1,19 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers3 (per-layer 3D fork, based on v1.61)
+
+See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
+
+### Features
+* Per-layer stereoscopic 3D: BG1-BG4 and sprites are drawn once per eye at their own depth (Settings tab → 3D Layer Depth (this game)).
+* Depth Mode per game: Recommended (default for new games), Auto (estimated from layer scroll speeds; uses the Recommended depths where nothing scrolls, so 3D stays on) or Manual (five depth sliders).
+* Manual depth sliders are labelled with what each layer usually holds, and **Show Only Selected Layer** shows just the selected layer on the top screen in its own colour (BG1 red, BG2 blue, BG3 yellow, BG4 pink, sprites green). Moving a slider previews the new depth live.
+* Added **Reset Depths to Recommended** (Manual mode).
+* Recommended list entry for ActRaiser (USA); other games get a general preset.
+* The picture is cropped slightly at the left and right edges by the widest layer shift, to hide the empty strips shifted layers leave.
+* The CIA installs as "Snes9x 3DS Layers" with its own title ID, next to the original Snes9x 3DS.
+
 ## v1.61
 
 ### Features
@@ -137,7 +150,7 @@ Notable changes to this project will be documented in this file.
 
 ### Code Refactoring
 * **Menu**: reduce redundant code + preserve selected item index per tab ([493c1a2](https://github.com/matbo87/snes9x_3ds/commit/493c1a22b3975c7cb39a55dbd38140e5e3cd2a14), [4d6378a](https://github.com/matbo87/snes9x_3ds/commit/4d6378a507cb77571e4444abb6fbd0df3ff5f555))
-* **Dialogs**: remove unnecessary animations for a snappier appearance ([2bb82c6](https://github.com/matbo87/snes9x_3ds/commit/2bb82c69512a2ef894ee5bb049be13ba567b6e89))
+* **Dialogs**: remove unnecessary animations for a snappier appearance ([2bb82c69](https://github.com/matbo87/snes9x_3ds/commit/2bb82c69512a2ef894ee5bb049be13ba567b6e89))
 * **Second screen content**: clean up + prevent flickering when info dialog appears/disappears ([c1899df](https://github.com/matbo87/snes9x_3ds/commit/c1899df01828b9653c3c635695e61d1ce4fbeaee))
 
 
@@ -188,12 +201,8 @@ Notable changes to this project will be documented in this file.
 
 - Added Swap Game Screen option
 - Added switch controller option like in official Virtual Console (SF2 "Training Mode", Konami cheat, ...)
-- Custom second screen image and border for every game (thanks to ramzinouri and Asdolo)
+- Custom second screen image and border for every game (thanks to ramzinouri)
 - Game Info option for second screen
 - Provide more Hotkeys (Quick Save/Load, Swap Controllers)
 - Disable Analog to Digital Type option which allows you to use circle pad for hotkeys as well
-- All game related files like cheats or save states are now in a single folder (folder name = rom name)
-- Screenshots are now in PNG format (thanks to ramzinouri)
-- Removed BlargSNES DSP Core, updated dsp-1, added dsp-2 -3 and -4 (thanks to ramzinouri)
-
-### [bubble2k Change Log](https://github.com/bubble2k16/snes9x_3ds#change-history)
+- All game related files like cover and border.png are... 

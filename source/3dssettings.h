@@ -4,7 +4,7 @@
 // Per-layer 3D: how the layer depths are chosen
 #define STEREO_DEPTH_MANUAL        0   // the five depth sliders
 #define STEREO_DEPTH_RECOMMENDED   1   // list for known games, otherwise a general preset (default)
-#define STEREO_DEPTH_AUTO          2   // estimated from layer scroll speeds, flat while nothing scrolls
+#define STEREO_DEPTH_AUTO          2   // estimated from layer scroll speeds, Recommended while nothing scrolls
 
 #include <stdio.h>
 #include <array>
@@ -269,6 +269,9 @@ typedef struct {
     long                TicksPerFrame;
 
     bool                TurboMode;             // Effective fast-forward state (toggle and/or hold hotkeys)
+
+    int                 StereoSoloLayer;       // Menu preview only: draw just this layer (0-3 = BG1-BG4, 4 = sprites), -1 = all
+    bool                StereoIsolateLayer;    // Menu: show only the layer whose depth slider is selected. Not saved.
 
     bool                LayerEnabled[8];       // Debug: per-layer enable toggle, index = LAYER_ID
                                                // (BG0-3, OBJ, Backdrop, Color Math, Brightness).
