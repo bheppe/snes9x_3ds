@@ -3,6 +3,8 @@
 .fvec       textureScale        ; #4
 .fvec       textureOffset       ; #5 
                                 ; x = texture offset (0.0 or 1.0 for mode5/6 hi-res flipping)
+.fvec       stereoOffset        ; #6
+                                ; x = horizontal shift in texture pixels for this layer and eye (0 = none)
 
 ; Constants
 .constf c_base          (0, 1, 2, 8)    ; (x, y, z, w)
@@ -92,6 +94,9 @@ depth_computation:
     mul     r0.z, r0.z, r1.x            ; r0.z = r0.z / 16
 
 draw:
+    ; per-eye stereo: shift the vertex horizontally (x is the tile's real x, flags live in y/z)
+    add     r0.x, stereoOffset.x, r0.x
+
     ; pass through, set final values for projection, textureScale and color in geo shader
     mov     outpos, r0
     mov     outtex, r10

@@ -1,12 +1,17 @@
 
 #include "snes9x.h"
 #include "ppu.h"
+#include "memmap.h"
+#include <stdlib.h>
+#include <string.h>
 
 #include <3ds.h>
 #include "3dsgpu.h"
 #include "3dsimpl.h"
 #include "3dsimpl_gpu.h"
 #include "3dslog.h"
+#include "3dssettings.h"
+#include <math.h>
 
 SGPU3DSExtended GPU3DSExt;
 
@@ -318,6 +323,215 @@ void gpu3dsDrawTiledLayer(SLayer *layer, u16 *indices, int from, int to) {
     gpu3dsDraw(&GPU3DS.vertices[vboId], (void *)(indices + batchFrom), batchCount);
 }
 
+static bool stereoLayersPending = false;
+static int  stereoEye = 0; // -1 = left eye pass, +1 = right eye pass, 0 = normal single pass
+
+//---------------------------------------------------------
+// Per-layer 3D depth modes (Settings: "Depth Mode")
+//   Manual       the five depth sliders
+//   Recommended  a depth list for known games (by ROM CRC32), otherwise a general preset
+//   Auto         estimates each layer's depth from how fast it scrolls (parallax): the fastest
+//                layer is the play field, slower layers are farther away, a layer that never
+//                scrolls is the HUD (BG3) or a fixed backdrop (farthest). While nothing scrolls
+//                (menus, name entry, title screens) everything fades to flat.
+// All depths are BG1..BG4, OBJ in SNES pixels at full slider, -8..8.
+//---------------------------------------------------------
+struct StereoGameDepths {
+    u32 crc32;
+    s8  depth[5];
+};
+
+static const StereoGameDepths stereoGameTable[] = {
+    { 0xEAC3358D, { -1, -4,  3, -2, 0 } },   // ActRaiser (USA)
+};
+
+static const s8 stereoPreset[5] = { -1, -3, 3, -2, 0 };
+
+static void stereoGetRecommended(s8 out[5])
+{
+    for (size_t i = 0; i < sizeof(stereoGameTable) / sizeof(stereoGameTable[0]); i++) {
+        if (stereoGameTable[i].crc32 == Memory.ROMCRC32) {
+            memcpy(out, stereoGameTable[i].depth, 5);
+            return;
+        }
+    }
+
+    memcpy(out, stereoPreset, 5);
+}
+
+static struct {
+    int  lastMode;
+    u32  lastCrc;
+    bool havePrev;
+    u16  prevH[4];
+    u16  prevV[4];
+    float speed[4];     // smoothed scroll speed, pixels per frame
+    float peak[4];      // slowly decaying maximum of speed: a layer's typical scroll speed
+    int  current[5];    // depths in use
+    int  target[5];     // depths Auto wants to reach
+    int  frame;
+} stereoAuto = { -1, 0, false };
+
+static void stereoAutoReset(int mode)
+{
+    s8 rec[5];
+    stereoGetRecommended(rec);
+
+    memset(&stereoAuto, 0, sizeof(stereoAuto));
+    stereoAuto.lastMode = mode;
+    stereoAuto.lastCrc = Memory.ROMCRC32;
+
+    // Auto starts flat and gains depth once layers scroll; the other modes start from the list
+    for (int i = 0; i < 5; i++) {
+        stereoAuto.current[i] = mode == STEREO_DEPTH_AUTO ? 0 : rec[i];
+        stereoAuto.target[i] = stereoAuto.current[i];
+    }
+}
+
+static inline int stereoScrollDelta(u16 now, u16 before)
+{
+    int d = (now - before) & 0x3FF;     // BG scroll registers are 10 bits and wrap
+    return d > 512 ? d - 1024 : d;
+}
+
+static inline int stereoClampDepth(int d)
+{
+    return d < -8 ? -8 : (d > 8 ? 8 : d);
+}
+
+// Called once per drawn frame, before the layers are drawn.
+static void stereoUpdateDepths(SLayerList *list)
+{
+    int mode = settings3DS.StereoDepthMode;
+
+    if (mode != stereoAuto.lastMode || Memory.ROMCRC32 != stereoAuto.lastCrc)
+        stereoAutoReset(mode);
+
+    if (mode == STEREO_DEPTH_MANUAL)
+        return;
+
+    s8 rec[5];
+    stereoGetRecommended(rec);
+
+    if (mode == STEREO_DEPTH_RECOMMENDED) {
+        for (int i = 0; i < 5; i++)
+            stereoAuto.current[i] = rec[i];
+        return;
+    }
+
+    // ---- Auto ----
+    // flat unless layers are scrolling (fades back to flat on menus and static screens)
+    for (int i = 0; i < 5; i++)
+        stereoAuto.target[i] = 0;
+
+    bool present[4];
+    for (int n = 0; n < 4; n++) {
+        SLayer *layer = &list->layers[LAYER_BG0 + n];
+        present[n] = (layer->verticesByTarget[TARGET_SNES_MAIN] + layer->verticesByTarget[TARGET_SNES_SUB]) > 0;
+    }
+
+    // sample the scroll positions
+    for (int n = 0; n < 4; n++) {
+        u16 h = PPU.BG[n].HOffset & 0x3FF;
+        u16 v = PPU.BG[n].VOffset & 0x3FF;
+
+        if (stereoAuto.havePrev) {
+            int dx = abs(stereoScrollDelta(h, stereoAuto.prevH[n]));
+            int dy = abs(stereoScrollDelta(v, stereoAuto.prevV[n]));
+            float s = (float)(dx + dy);
+
+            // a jump of this size is a scene change or a screen effect, not scrolling
+            if (s > 64.0f)
+                s = 0.0f;
+
+            stereoAuto.speed[n] += (s - stereoAuto.speed[n]) * (1.0f / 16.0f);
+
+            float decayed = stereoAuto.peak[n] * 0.9996f;
+            stereoAuto.peak[n] = stereoAuto.speed[n] > decayed ? stereoAuto.speed[n] : decayed;
+        }
+
+        stereoAuto.prevH[n] = h;
+        stereoAuto.prevV[n] = v;
+    }
+    stereoAuto.havePrev = true;
+
+    // the fastest layer is the play field
+    int ref = -1;
+    float refPeak = 0.0f;
+
+    if (PPU.BGMode != 7) {
+        for (int n = 0; n < 4; n++) {
+            if (present[n] && stereoAuto.peak[n] > refPeak) {
+                refPeak = stereoAuto.peak[n];
+                ref = n;
+            }
+        }
+    }
+
+    // until something has really scrolled there is nothing to measure: stay flat
+    if (ref >= 0 && refPeak >= 0.75f) {
+        const int playDepth = -1;
+
+        for (int n = 0; n < 4; n++) {
+            if (!present[n])
+                continue;
+
+            float r = stereoAuto.peak[n] / refPeak;
+            int depth;
+
+            if (r < 0.08f)
+                depth = (n == 2) ? 3 : -6;                      // never scrolls: HUD (BG3) or a fixed backdrop
+            else
+                depth = playDepth - (int)lroundf(5.0f * (1.0f - r));   // slower than the play field = farther away
+
+            stereoAuto.target[n] = stereoClampDepth(depth);
+        }
+
+        stereoAuto.target[4] = stereoClampDepth(stereoAuto.target[ref] + 1);   // sprites ride with the play field
+    }
+
+    // move toward the target one step at a time so the picture never jumps
+    if (++stereoAuto.frame >= 8) {
+        stereoAuto.frame = 0;
+
+        for (int i = 0; i < 5; i++) {
+            if (stereoAuto.current[i] < stereoAuto.target[i]) stereoAuto.current[i]++;
+            else if (stereoAuto.current[i] > stereoAuto.target[i]) stereoAuto.current[i]--;
+        }
+    }
+}
+
+// The depths the renderer uses right now (Manual: the sliders).
+void gpu3dsStereoGetDepths(int out[5])
+{
+    for (int i = 0; i < 5; i++)
+        out[i] = settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL
+                     ? settings3DS.StereoLayerDepth[i]
+                     : stereoAuto.current[i];
+}
+
+// Horizontal shift (in texture pixels) for a layer in one eye. The disparity between the eyes
+// is a whole number of SNES pixels so tiles stay on the pixel grid; an odd pixel goes to the left eye.
+static float stereoLayerShift(LAYER_ID id, bool rightEye)
+{
+    if (id > LAYER_OBJ)
+        return 0.0f;
+
+    int depths[5];
+    gpu3dsStereoGetDepths(depths);
+
+    float disparity = depths[id] * osGet3DSliderState() * (gpu3dsGetIODBase() / 3.0f);
+    int d = (int)lroundf(disparity);
+    int shift = rightEye ? -(int)floorf(d / 2.0f) : (int)ceilf(d / 2.0f);
+
+    return (float)(shift * (GPU3DSExt.renderWidth / 256));
+}
+
+static void stereoSetLayerShift(float shift)
+{
+    gpu3dsSetStereoShift(shift);
+}
+
 void gpu3dsDrawLayers(SLayerList *list) {
     // draw window_lr into depth buffer first
     SLayer *layer = &list->layers[LAYER_WINDOW_LR];
@@ -345,6 +559,9 @@ void gpu3dsDrawLayers(SLayerList *list) {
             if (to <= from) continue;
 
             GPU3DS.currentRenderState.depthTest = id < LAYER_OBJ ? SGPU_STATE_ENABLED : SGPU_STATE_DISABLED;
+
+            if (id < LAYER_BACKDROP)
+                stereoSetLayerShift(stereoEye != 0 ? stereoLayerShift(id, stereoEye > 0) : 0.0f);
 
             if (id < LAYER_BACKDROP) {
                 if (list->useDrawArraysForTiledLayers) {
@@ -454,8 +671,10 @@ void gpu3dsPrepareSnesScreenForNextFrame() {
     }
 }
 
-void gpu3dsDrawSnesScreen() {
+void gpu3dsDrawSnesScreen(bool allowStereo) {
     SLayerList *list = &GPU3DSExt.layerList;
+
+    stereoLayersPending = false;
 
     if (!list->verticesTotal || list->hasSkippedSections)
         return;
@@ -516,8 +735,41 @@ void gpu3dsDrawSnesScreen() {
         }
     }
 
+    if (allowStereo && settings3DS.Stereo3DLayers)
+        stereoUpdateDepths(list);
+
+    if (allowStereo && settings3DS.Stereo3DLayers && gpu3dsGetIOD() > 0.0f) {
+        // the scene renderer draws the layers once per eye (gpu3dsDrawSnesScreenEye)
+        stereoLayersPending = true;
+        return;
+    }
+
     gpu3dsDrawMode7Texture();
     gpu3dsDrawLayers(list);
+}
+
+bool gpu3dsSnesLayersPendingPerEye() {
+    return stereoLayersPending;
+}
+
+void gpu3dsDrawSnesScreenEye(bool rightEye) {
+    if (!stereoLayersPending)
+        return;
+
+    // The scene renderer left its own state behind (screen shader, screen texture, ...):
+    // go back to the state a frame starts with, which is what the layer pass expects.
+    gpu3dsSetDefaultRenderState(SPROGRAM_TILES, false);
+    GPU3DS.currentRenderState.alphaBlending = ALPHA_BLENDING_DISABLED;
+
+    stereoEye = rightEye ? 1 : -1;
+    gpu3dsDrawMode7Texture();   // no-op after the first eye (it clears its own dirty flags)
+    gpu3dsDrawLayers(&GPU3DSExt.layerList);
+    stereoEye = 0;
+    stereoSetLayerShift(0.0f);
+}
+
+void gpu3dsEndSnesScreenEyes() {
+    stereoLayersPending = false;
 }
 
 void gpu3dsCommitLayerSection(SGPU_VBO_ID vboId, LAYER_ID id, SGPURenderState *state, bool sub, bool reuseVertices) {
