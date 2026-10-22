@@ -733,15 +733,24 @@ static void impl3dsSceneRenderEye(bool firstFrame, bool paused, float pauseProgr
 		img3dsDrawBackground(UI_BG_GAME, paused, xOffset);
 	}
 
+	// Per-layer 3D menu preview: the single layer shown for a depth slider gets its own colour
+	// (BG1 red, BG2 blue, BG3 yellow, BG4 pink, sprites green) so it is easy to tell apart.
+	static const u32 stereoPreviewTints[5] = { 0xFF2828FF, 0x2878FFFF, 0xFFFF28FF, 0xFF28FFFF, 0x28FF28FF };
+	bool tintPreview = paused && settings3DS.StereoSoloLayer >= 0 && settings3DS.StereoSoloLayer < 5;
+
 	gpu3dsAddSimpleQuadVertexes(
 		gameScreenViewport.sx0, gameScreenViewport.sy0, gameScreenViewport.sx1, gameScreenViewport.sy1,
 		gameScreenViewport.tx0, gameScreenViewport.ty0,
-		gameScreenViewport.tx1, gameScreenViewport.ty1, 0);
+		gameScreenViewport.tx1, gameScreenViewport.ty1, 0,
+		tintPreview ? (int)stereoPreviewTints[settings3DS.StereoSoloLayer] : 0);
 
-	GPU3DS.currentRenderState.textureEnv = TEX_ENV_REPLACE_TEXTURE0;
+	GPU3DS.currentRenderState.textureEnv = tintPreview ? TEX_ENV_MODULATE_COLOR_BRIGHT : TEX_ENV_REPLACE_TEXTURE0;
 	GPU3DS.currentRenderState.textureBind = SNES_MAIN;
 
 	gpu3dsDraw(list, NULL, list->count);
+
+	if (tintPreview)
+		balancedFilterEnabled = false;   // its overlay would draw the layer again without the tint
 
 	if (balancedFilterEnabled) {
 		gpu3dsAddSimpleQuadVertexes(
@@ -887,6 +896,14 @@ void impl3dsSceneRender(bool firstFrame, bool paused) {
 	bool layeredStereo = gpu3dsSnesLayersPendingPerEye();
 	float iod = layeredStereo ? 0.0f : gpu3dsGetIOD();
 	bool renderRightEye = layeredStereo || iod != 0.0f;
+
+	// Shifted layers leave a thin empty strip at the screen edges: crop the picture by the widest shift.
+	// The paused picture gets the same crop, so opening the menu does not make the picture jump.
+	if (layeredStereo || (paused && settings3DS.Stereo3DLayers && gpu3dsGetIOD() > 0.0f)) {
+		float crop = gpu3dsStereoEdgeCrop();
+		gameScreenViewport.tx0 += crop;
+		gameScreenViewport.tx1 -= crop;
+	}
 
 	bool balancedFilterEnabled =
 		settings3DS.ScreenFilter == Setting::ScreenFilter::Balanced && !screenshot.dirty &&
