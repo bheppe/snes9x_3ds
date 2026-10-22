@@ -1,6 +1,12 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers4 (per-layer 3D fork, based on v1.61)
+
+### Changes
+* Yoshi's Island and Super Mario World are now in the Recommended list (BG1 0, BG2 -4, BG3 +3, BG4 -2, Sprites 0): sprites share one depth, so BG1, the layer the characters stand on, sits at the same depth and they no longer look like they float, and BG2 -4 fixes the flat mountain layer in Yoshi's Island Level 1. CRC32s and depths from SWChris. All other games keep the general preset (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0).
+* With **Show Only Selected Layer** unchecked, the top screen now shows all layers together with the selected layer highlighted in its strong colour and the other layers in a paler version of theirs, so you can judge the final picture. Checked still shows only the selected layer. Suggested by Chompsky__Honk.
+
 ## v1.61-layers3 (per-layer 3D fork, based on v1.61)
 
 See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
@@ -205,7 +211,7 @@ See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
 - Game Info option for second screen
 - Provide more Hotkeys (Quick Save/Load, Swap Controllers)
 - Disable Analog to Digital Type option which allows you to use circle pad for hotkeys as well
-- All game related files like cheats or save states are now in a single folder (folder name = rom name)
+- All game related files are now in a single folder (folder name = rom name)
 - Screenshots are now in PNG format (thanks to ramzinouri)
 - Removed BlargSNES DSP Core, updated dsp-1, added dsp-2 -3 and -4 (thanks to ramzinouri)
 
