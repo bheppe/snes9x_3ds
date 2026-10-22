@@ -10,6 +10,7 @@
 #include "3dsui_notif.h"
 #include "3dsui_img.h"
 #include "3dsimpl.h"
+#include "3dsimpl_gpu.h"
 #include "3dsmenu.h"
 #include "3dsra.h"
 #include "3dsra_ui.h"
@@ -22,6 +23,8 @@ static const int MENU_LIST_BOTTOM = SCREEN_HEIGHT - 20;
 static bool swapBuffer = true;
 static bool gameScreenDirty = true;
 static bool secondScreenDirty = true;
+static bool layerPreviewShown = false;   // the game screen currently shows a re-drawn per-layer 3D preview
+static int  lastPreviewRow = -1;
 static bool isScrolling = false;
 
 static int cheatsActive = 0;
@@ -540,7 +543,7 @@ void menu3dsDrawMenu(std::vector<SMenuTab>& menuTabs, int& currentMenuTab, int m
             // multi color buttons for dark mode theme
             buttonColor = button.color;
         }
-        
+ 
         bool isFileTab = menu3dsIsFileTab(currentMenuTab, menuTabs);
         bool inSubPage = currentTab->IsSubPage();
         bool visible =
@@ -1221,6 +1224,25 @@ int menu3dsMenuSelectItem(SMenuTab& dialogTab, bool& isDialog, int& currentMenuT
             secondScreenDirty = true;
         }
 
+        // Per-layer 3D: while a layer's depth slider is selected, the top screen redraws the paused frame's
+        // layers with the current depths, and (if enabled) shows only that layer.
+        int previewRow = -1;
+        {
+            if (!isDialog && settings3DS.isRomLoaded &&
+                currentTab->SelectedItemIndex >= 0 &&
+                currentTab->SelectedItemIndex < static_cast<int>(currentTab->MenuItems.size()))
+                previewRow = currentTab->MenuItems[currentTab->SelectedItemIndex].HighlightLayer;
+
+            int soloLayer = (previewRow >= 0 && settings3DS.StereoIsolateLayer) ? previewRow : -1;
+
+            if (settings3DS.StereoSoloLayer != soloLayer || lastPreviewRow != previewRow) {
+                settings3DS.StereoSoloLayer = soloLayer;
+                lastPreviewRow = previewRow;
+                GPU3DS.gameScreenBufferDesync = true;
+                gameScreenDirty = true;
+            }
+        }
+
         gpu3dsSetTopMode();
 
         float iod = gpu3dsGetIOD();
@@ -1240,10 +1262,15 @@ int menu3dsMenuSelectItem(SMenuTab& dialogTab, bool& isDialog, int& currentMenuT
                 gfxSetScreenFormat(settings3DS.GameScreen, gpuBufFmt);
             }
 
+            // redraw the layers while a depth slider is selected, and once more after leaving it to restore the full picture
+            bool redrawLayers = settings3DS.isRomLoaded && (previewRow >= 0 || layerPreviewShown);
+
             int passes = GPU3DS.gameScreenBufferDesync ? 2 : 1;
             for (int pass = 0; pass < passes; pass++) {
-                gpu3dsFrameBegin();
+                gpu3dsFrameBegin(0, redrawLayers);
                     if (settings3DS.isRomLoaded) {
+                        if (redrawLayers)
+                            gpu3dsDrawSnesScreen(true);
                         impl3dsSceneRender(true, true);   // dims the ingame screen
                     } else {
                         bool renderRightEye = iod != 0;
@@ -1254,6 +1281,7 @@ int menu3dsMenuSelectItem(SMenuTab& dialogTab, bool& isDialog, int& currentMenuT
             }
 
             GPU3DS.gameScreenBufferDesync = false;
+            layerPreviewShown = previewRow >= 0;
 
             gameScreenDirty = impl3dsPauseAnimationRunning();
         }
@@ -1268,6 +1296,24 @@ int menu3dsMenuSelectItem(SMenuTab& dialogTab, bool& isDialog, int& currentMenuT
         }
 
         menu3dsSwapBuffersAndWaitForVBlank();
+    }
+
+    // never leave the layer preview behind when the menu is left: the game screen texture still holds it,
+    // so redraw the full picture once
+    settings3DS.StereoSoloLayer = -1;
+    lastPreviewRow = -1;
+
+    if (layerPreviewShown && settings3DS.isRomLoaded) {
+        gpu3dsFrameBegin(0, true);
+            gpu3dsDrawSnesScreen(true);
+            impl3dsSceneRender(true, true);
+        gpu3dsFrameEnd();
+    }
+
+    if (layerPreviewShown) {
+        layerPreviewShown = false;
+        GPU3DS.gameScreenBufferDesync = true;
+        gameScreenDirty = true;
     }
 
     return returnResult;
