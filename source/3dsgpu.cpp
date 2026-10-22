@@ -172,6 +172,27 @@ void gpu3dsSetTextureEnvironmentModulateColor() {
     gpu3dsClearTextureEnv(1);
 }
 
+// texture * vertex colour, then doubled: dark pixels of a layer still come out in the tint colour
+void gpu3dsSetTextureEnvironmentModulateColorBright() {
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+
+    C3D_TexEnv* env1 = C3D_GetTexEnv(1);
+    C3D_TexEnvInit(env1);
+
+    C3D_TexEnvSrc(env1, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env1, C3D_RGB, GPU_ADD);
+    C3D_TexEnvSrc(env1, C3D_Alpha, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env1, C3D_Alpha, GPU_REPLACE);
+
+    gpu3dsClearTextureEnv(2);
+}
+
 void gpu3dsSetTextureEnvironmentBlendColorOnTexture() {
     C3D_TexEnv* env = C3D_GetTexEnv(0);
     C3D_TexEnvInit(env);
