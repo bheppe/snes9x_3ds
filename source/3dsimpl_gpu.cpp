@@ -7,6 +7,8 @@
 #include "3dsimpl.h"
 #include "3dsimpl_gpu.h"
 #include "3dslog.h"
+#include "3dssettings.h"
+#include <math.h>
 
 SGPU3DSExtended GPU3DSExt;
 
@@ -318,6 +320,28 @@ void gpu3dsDrawTiledLayer(SLayer *layer, u16 *indices, int from, int to) {
     gpu3dsDraw(&GPU3DS.vertices[vboId], (void *)(indices + batchFrom), batchCount);
 }
 
+static bool stereoLayersPending = false;
+static int  stereoEye = 0; // -1 = left eye pass, +1 = right eye pass, 0 = normal single pass
+
+// Horizontal shift (in texture pixels) for a layer in one eye. The disparity between the eyes
+// is a whole number of SNES pixels so tiles stay on the pixel grid; an odd pixel goes to the left eye.
+static float stereoLayerShift(LAYER_ID id, bool rightEye)
+{
+    if (id > LAYER_OBJ)
+        return 0.0f;
+
+    float disparity = settings3DS.StereoLayerDepth[id] * osGet3DSliderState() * (gpu3dsGetIODBase() / 3.0f);
+    int d = (int)lroundf(disparity);
+    int shift = rightEye ? -(int)floorf(d / 2.0f) : (int)ceilf(d / 2.0f);
+
+    return (float)(shift * (GPU3DSExt.renderWidth / 256));
+}
+
+static void stereoSetLayerShift(float shift)
+{
+    gpu3dsSetStereoShift(shift);
+}
+
 void gpu3dsDrawLayers(SLayerList *list) {
     // draw window_lr into depth buffer first
     SLayer *layer = &list->layers[LAYER_WINDOW_LR];
@@ -345,6 +369,9 @@ void gpu3dsDrawLayers(SLayerList *list) {
             if (to <= from) continue;
 
             GPU3DS.currentRenderState.depthTest = id < LAYER_OBJ ? SGPU_STATE_ENABLED : SGPU_STATE_DISABLED;
+
+            if (id < LAYER_BACKDROP)
+                stereoSetLayerShift(stereoEye != 0 ? stereoLayerShift(id, stereoEye > 0) : 0.0f);
 
             if (id < LAYER_BACKDROP) {
                 if (list->useDrawArraysForTiledLayers) {
@@ -454,8 +481,10 @@ void gpu3dsPrepareSnesScreenForNextFrame() {
     }
 }
 
-void gpu3dsDrawSnesScreen() {
+void gpu3dsDrawSnesScreen(bool allowStereo) {
     SLayerList *list = &GPU3DSExt.layerList;
+
+    stereoLayersPending = false;
 
     if (!list->verticesTotal || list->hasSkippedSections)
         return;
@@ -516,8 +545,38 @@ void gpu3dsDrawSnesScreen() {
         }
     }
 
+    if (allowStereo && settings3DS.Stereo3DLayers && gpu3dsGetIOD() > 0.0f) {
+        // the scene renderer draws the layers once per eye (gpu3dsDrawSnesScreenEye)
+        stereoLayersPending = true;
+        return;
+    }
+
     gpu3dsDrawMode7Texture();
     gpu3dsDrawLayers(list);
+}
+
+bool gpu3dsSnesLayersPendingPerEye() {
+    return stereoLayersPending;
+}
+
+void gpu3dsDrawSnesScreenEye(bool rightEye) {
+    if (!stereoLayersPending)
+        return;
+
+    // The scene renderer left its own state behind (screen shader, screen texture, ...):
+    // go back to the state a frame starts with, which is what the layer pass expects.
+    gpu3dsSetDefaultRenderState(SPROGRAM_TILES, false);
+    GPU3DS.currentRenderState.alphaBlending = ALPHA_BLENDING_DISABLED;
+
+    stereoEye = rightEye ? 1 : -1;
+    gpu3dsDrawMode7Texture();   // no-op after the first eye (it clears its own dirty flags)
+    gpu3dsDrawLayers(&GPU3DSExt.layerList);
+    stereoEye = 0;
+    stereoSetLayerShift(0.0f);
+}
+
+void gpu3dsEndSnesScreenEyes() {
+    stereoLayersPending = false;
 }
 
 void gpu3dsCommitLayerSection(SGPU_VBO_ID vboId, LAYER_ID id, SGPURenderState *state, bool sub, bool reuseVertices) {
