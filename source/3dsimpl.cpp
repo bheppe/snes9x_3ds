@@ -882,8 +882,11 @@ void impl3dsSceneRender(bool firstFrame, bool paused) {
 
 	bool isFullScreen = gameScreenViewport.sWidth >= settings3DS.GameScreenWidth && gameScreenViewport.cHeight >= SCREEN_HEIGHT;
 	bool drawBackground = !isFullScreen;
-	float iod = gpu3dsGetIOD();
-	bool renderRightEye = iod != 0.0f;
+	// Per-layer 3D: the layers are drawn once per eye with their own shifts, so the finished
+	// picture itself needs no extra eye offset.
+	bool layeredStereo = gpu3dsSnesLayersPendingPerEye();
+	float iod = layeredStereo ? 0.0f : gpu3dsGetIOD();
+	bool renderRightEye = layeredStereo || iod != 0.0f;
 
 	bool balancedFilterEnabled =
 		settings3DS.ScreenFilter == Setting::ScreenFilter::Balanced && !screenshot.dirty &&
@@ -894,16 +897,22 @@ void impl3dsSceneRender(bool firstFrame, bool paused) {
 	}
 
 	GPU3DS.activeSide = GFX_LEFT;
+	if (layeredStereo)
+		gpu3dsDrawSnesScreenEye(false);
 	impl3dsSceneRenderEye(firstFrame, paused, pauseProgress, list, gameScreenViewport, drawBackground, balancedFilterEnabled, -iod);
 
 	if (renderRightEye) {
 		GPU3DS.activeSide = GFX_RIGHT;
 		GPU3DS.appliedRenderState.target = TARGET_UNSET;
 
+		if (layeredStereo)
+			gpu3dsDrawSnesScreenEye(true);
 		impl3dsSceneRenderEye(firstFrame, paused, pauseProgress, list, gameScreenViewport, drawBackground, balancedFilterEnabled, iod);
 
 		GPU3DS.activeSide = GFX_LEFT;
 	}
+
+	gpu3dsEndSnesScreenEyes();
 }
 
 //---------------------------------------------------------
@@ -925,7 +934,7 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 	gpu3dsFrameBegin(screenshot.dirty ? C3D_FRAME_SYNCDRAW : 0, pendingSnesDraw);
 		if (pendingSnesDraw) {
 			t3dsStartTimer(TIMER_DRAW_SNES_SCREEN);
-    		gpu3dsDrawSnesScreen();
+    		gpu3dsDrawSnesScreen(!screenshot.dirty);
 			t3dsStopTimer(TIMER_DRAW_SNES_SCREEN);
 		}
 
@@ -1208,7 +1217,7 @@ bool impl3dsTakeScreenshot(char *path, size_t bufferSize, bool renderFrame) {
     	gpu3dsFrameBegin(0, true);
 
 		if (settings3DS.Mode7BilinearFilter) {
-			gpu3dsDrawSnesScreen();
+			gpu3dsDrawSnesScreen(false);
 		}
 
     	impl3dsSceneRender(true, false);
