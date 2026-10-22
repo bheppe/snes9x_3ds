@@ -24,13 +24,17 @@ Open the emulator menu, **Settings** tab, section **3D Layer Depth (this game)**
   once layers scroll. If you stand still in a game for about 40 seconds it drifts back to the Recommended depths.
 - **Recommended** (default): fixed depths. Games in the built-in list (by ROM CRC32, currently ActRaiser USA)
   use depths checked by hand; every other game gets a general preset
-  (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0).
+  (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0). BG1 sits one step behind the sprites so characters pop out of the
+  play field. Sprites share one depth, so in some games (platformers like Yoshi's Island or Super Mario World)
+  characters can look slightly like they float; set BG1 to 0 in Manual for those.
 - **Manual**: set a depth (-8..8) for BG1, BG2, BG3, BG4 and Sprites (OBJ). Positive = toward you,
   negative = away. Switching to Manual starts from the depths that were in use. Each slider is labelled with
   what its layer usually holds (BG1 main layer, BG2 back layer, BG3 HUD / text, BG4 extra, Sprites characters),
   but games differ. With **Show Only Selected Layer** checked (default, not saved), the top screen shows just the
   layer whose slider is selected, in a strong colour so it is easy to tell apart (BG1 red, BG2 blue, BG3 yellow,
-  BG4 pink, Sprites green; the colour is named on each slider), and moving the slider previews the new depth live. Uncheck it to see all layers together.
+  BG4 pink, Sprites green; the colour is named on each slider), and moving the slider previews the new depth live.
+  Uncheck it to see all layers together: the selected layer stays in its strong colour and the other layers get a
+  paler version of theirs, so you can judge the final picture. (Mode 7 backgrounds are not tinted.)
   **Reset Depths to Recommended** puts the five sliders back to the depths Recommended mode uses for this game.
 
 Example Manual depths for ActRaiser action stages: BG1 -1, BG2 -4, BG3 +3, BG4 -2, Sprites 0
