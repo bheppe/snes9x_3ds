@@ -132,6 +132,7 @@ typedef enum
     TEX_ENV_REPLACE_TEXTURE0_VERTEX_ALPHA,
     TEX_ENV_BLEND_COLOR_TEXTURE0,
     TEX_ENV_MODULATE_COLOR,
+    TEX_ENV_MODULATE_COLOR_BRIGHT,   // texture * vertex colour, then doubled (menu layer preview)
     TEX_ENV_UNSET,
 } SGPU_TEX_ENV;
 
@@ -353,6 +354,7 @@ void gpu3dsSetTextureEnvironmentReplaceTexture0WithColorAlpha();
 void gpu3dsSetTextureEnvironmentReplaceTexture0WithVertexAlpha();
 void gpu3dsSetTextureEnvironmentBlendColorOnTexture();
 void gpu3dsSetTextureEnvironmentModulateColor();
+void gpu3dsSetTextureEnvironmentModulateColorBright();
 
 void gpu3dsBindTexture(SGPU_TEXTURE_ID textureId);
 
@@ -421,6 +423,9 @@ static inline void gpu3dsApplyRenderState(SGPURenderState *state)
                 break;
             case TEX_ENV_MODULATE_COLOR:
                 gpu3dsSetTextureEnvironmentModulateColor();
+                break;
+            case TEX_ENV_MODULATE_COLOR_BRIGHT:
+                gpu3dsSetTextureEnvironmentModulateColorBright();
                 break;
             default:
                 gpu3dsSetTextureEnvironmentReplaceColor();
