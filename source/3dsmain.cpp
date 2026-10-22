@@ -991,9 +991,10 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
                 }, MenuItemType::Action, "  Reset Depths to Recommended"_s, ""_s);
 
                 AddMenuDisabledOption(items, "  + = out of the screen, - = behind it, 0 = screen plane"_s);
-                AddMenuDisabledOption(items, "  Layer names are typical; games differ. With the box above"_s);
-                AddMenuDisabledOption(items, "  checked, the top screen shows only the selected layer"_s);
-                AddMenuDisabledOption(items, "  in the colour named next to its slider."_s);
+                AddMenuDisabledOption(items, "  Layer names are typical; games differ. The top screen"_s);
+                AddMenuDisabledOption(items, "  shows the selected layer in the colour named next to"_s);
+                AddMenuDisabledOption(items, "  its slider: alone if the box above is checked, or"_s);
+                AddMenuDisabledOption(items, "  highlighted among all layers (others pale) if not."_s);
             } else {
                 AddMenuDisabledOption(items, "  Depths are chosen automatically."_s);
                 AddMenuDisabledOption(items, "  Switch to Manual to adjust them yourself."_s);
