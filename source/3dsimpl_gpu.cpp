@@ -226,6 +226,14 @@ void sortSections(SLayerSection *sections, int n, bool tile0) {
     }
 }
 
+// Menu layer highlight (Settings > 3D Layer Depth, Show Only Selected Layer unchecked): while true, the tile
+// layers are drawn with TEX_ENV_REPLACE_TEXTURE0_TINT_COLOR_ALPHA and gpu3dsLayerTintColor.
+static bool stereoTintActive = false;
+
+static inline SGPU_TEX_ENV layerTextureEnv() {
+    return stereoTintActive ? TEX_ENV_REPLACE_TEXTURE0_TINT_COLOR_ALPHA : TEX_ENV_REPLACE_TEXTURE0_COLOR_ALPHA;
+}
+
 // window_lr, backdrop, color math, brightness
 void gpu3dsDrawVerticalSectionLayer(SLayer *layer, int from, int to) {
     SLayerList *list = &GPU3DSExt.layerList;
@@ -252,7 +260,7 @@ void gpu3dsDrawVerticalSectionLayer(SLayer *layer, int from, int to) {
 // DrawArrays and DrawElements on the OBJ/BG pass seems to freeze real hardware
 // (SMK race).
 void gpu3dsDrawTiledLayerSingleSection(SLayer *layer, SLayerSection *section) {
-    GPU3DS.currentRenderState.textureEnv = TEX_ENV_REPLACE_TEXTURE0_COLOR_ALPHA;
+    GPU3DS.currentRenderState.textureEnv = layerTextureEnv();
     GPU3DS.currentRenderState.alphaBlending = ALPHA_BLENDING_DISABLED;
 
     u64 mask = gpu3dsGetLayerPackedMask(layer->id, true);
@@ -268,8 +276,8 @@ void gpu3dsDrawTiledLayer(SLayer *layer, u16 *indices, int from, int to) {
     u16 batchFrom = 0;
     u16 batchCount = 0;
 
-    // Those fields are set once before the loop and stay constant 
-    GPU3DS.currentRenderState.textureEnv = TEX_ENV_REPLACE_TEXTURE0_COLOR_ALPHA;
+    // Those fields are set once before the loop and stay constant
+    GPU3DS.currentRenderState.textureEnv = layerTextureEnv();
     GPU3DS.currentRenderState.alphaBlending = ALPHA_BLENDING_DISABLED;
     
     // restrict the diff to only the properties that actually vary across sections for that layer type
@@ -343,8 +351,15 @@ struct StereoGameDepths {
 
 static const StereoGameDepths stereoGameTable[] = {
     { 0xEAC3358D, { -1, -4,  3, -2, 0 } },   // ActRaiser (USA)
+    // BG1 and sprites at the same depth so the characters do not float above the ground,
+    // BG2 -4 keeps the mountain layer from looking flat (CRC32s and depths from SWChris on r/3dshomebrew)
+    { 0xD138F224, {  0, -4,  3, -2, 0 } },   // Yoshi's Island
+    { 0xB19ED489, {  0, -4,  3, -2, 0 } },   // Super Mario World
 };
 
+// General preset, checked by hand on Donkey Kong Country, Secret of Mana and Super Metroid.
+// BG1 sits 1 step behind the sprites so characters pop out of the play field. Games where characters
+// look like they float can be set to BG1 0 in Manual, or get their own line in stereoGameTable.
 static const s8 stereoPreset[5] = { -1, -3, 3, -2, 0 };
 
 static void stereoGetRecommended(s8 out[5])
@@ -561,6 +576,21 @@ float gpu3dsStereoEdgeCrop()
     return widest;
 }
 
+// Menu highlight colours for BG1, BG2, BG3, BG4, sprites: red, blue, yellow, pink, green (the colours named on the
+// Settings sliders), as 0xRRGGBB. The selected layer gets its colour strongly; the others a pale version of theirs.
+// The TEV doubles texture * constant, so the constant is half of the wanted multiplier.
+static u32 stereoLayerTintColor(LAYER_ID id, bool selected)
+{
+    static const u32 rgb[5] = { 0xFF2828, 0x2878FF, 0xFFFF28, 0xFF28FF, 0x28FF28 };
+    u32 c = rgb[id <= LAYER_OBJ ? id : 0];
+    u32 channel[3] = { (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF };
+
+    for (int k = 0; k < 3; k++)
+        channel[k] = selected ? channel[k] : (153 + channel[k] * 2 / 5) / 2;   // pale: 60% white + 40% of the colour, halved
+
+    return 0xFF000000u | (channel[2] << 16) | (channel[1] << 8) | channel[0];   // 0xAABBGGRR
+}
+
 void gpu3dsDrawLayers(SLayerList *list) {
     // draw window_lr into depth buffer first
     SLayer *layer = &list->layers[LAYER_WINDOW_LR];
@@ -593,6 +623,13 @@ void gpu3dsDrawLayers(SLayerList *list) {
 
             GPU3DS.currentRenderState.depthTest = id < LAYER_OBJ ? SGPU_STATE_ENABLED : SGPU_STATE_DISABLED;
 
+            // menu preview: the selected layer in a strong colour, the others in a pale one
+            stereoTintActive = id <= LAYER_OBJ && settings3DS.StereoHighlightLayer >= 0 && settings3DS.StereoSoloLayer < 0;
+            if (stereoTintActive) {
+                gpu3dsLayerTintColor = stereoLayerTintColor(id, id == (LAYER_ID)settings3DS.StereoHighlightLayer);
+                GPU3DS.appliedRenderState.textureEnv = TEX_ENV_UNSET;   // the tint colour changes per layer: re-apply the environment
+            }
+
             if (id < LAYER_BACKDROP)
                 stereoSetLayerShift(stereoEye != 0 ? stereoLayerShift(id, stereoEye > 0) : 0.0f);
 
@@ -611,6 +648,8 @@ void gpu3dsDrawLayers(SLayerList *list) {
             }
         }
     }
+
+    stereoTintActive = false;
 }
 
 void gpu3dsDrawMode7Texture()
