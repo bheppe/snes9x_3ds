@@ -22,11 +22,11 @@ Open the emulator menu, **Settings** tab, section **3D Layer Depth (this game)**
   never scrolls is the HUD (BG3) or a fixed backdrop. On screens where nothing scrolls (title
   screens, menus, name entry) it uses the Recommended depths (below), and moves to its own estimate
   once layers scroll. If you stand still in a game for about 40 seconds it drifts back to the Recommended depths.
-- **Recommended** (default): fixed depths. Games in the built-in list (by ROM CRC32, currently ActRaiser USA)
-  use depths checked by hand; every other game gets a general preset
+- **Recommended** (default): fixed depths. Games in the built-in list (by ROM CRC32: ActRaiser USA, Yoshi's Island
+  and Super Mario World) use depths checked by hand; every other game gets a general preset
   (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0). BG1 sits one step behind the sprites so characters pop out of the
-  play field. Sprites share one depth, so in some games (platformers like Yoshi's Island or Super Mario World)
-  characters can look slightly like they float; set BG1 to 0 in Manual for those.
+  play field. Sprites share one depth, so in some games characters can look slightly like they float; the built-in
+  list has Yoshi's Island and Super Mario World at BG1 0 for that reason, and you can set BG1 to 0 in Manual for any other game.
 - **Manual**: set a depth (-8..8) for BG1, BG2, BG3, BG4 and Sprites (OBJ). Positive = toward you,
   negative = away. Switching to Manual starts from the depths that were in use. Each slider is labelled with
   what its layer usually holds (BG1 main layer, BG2 back layer, BG3 HUD / text, BG4 extra, Sprites characters),
