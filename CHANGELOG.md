@@ -211,7 +211,7 @@ See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
 - Game Info option for second screen
 - Provide more Hotkeys (Quick Save/Load, Swap Controllers)
 - Disable Analog to Digital Type option which allows you to use circle pad for hotkeys as well
-- All game related files are now in a single folder (folder name = rom name)
+- All game related files like cheats or save states are now in a single folder (folder name = rom name)
 - Screenshots are now in PNG format (thanks to ramzinouri)
 - Removed BlargSNES DSP Core, updated dsp-1, added dsp-2 -3 and -4 (thanks to ramzinouri)
 
