@@ -27,7 +27,7 @@ void settings3dsResetGlobalDefaults() {
     settings3DS.Intensity3D = Setting::Intensity3D::Standard;
     settings3DS.LogFileEnabled = false;
 
-    settings3DS.ScreenStretch = Setting::ScreenStretch::Aspect_4_3;
+    settings3DS.ScreenStretch = Setting::ScreenStretch::Full;
     settings3DS.ScreenFilter = Setting::ScreenFilter::Smooth;
     settings3dsApplyScreenStretch();
     
@@ -76,15 +76,22 @@ void settings3dsResetGameDefaults() {
 
     memset(settings3DS.LayerEnabled, true, sizeof(settings3DS.LayerEnabled));
 
-    settings3DS.EnhancedResolution = Setting::EnhancedResolution::Off;
+    settings3DS.EnhancedResolution = Setting::EnhancedResolution::Standard;
     settings3DS.RAEnabled = true;
     settings3DS.RAChallengeIndicators = true;
     settings3DS.RAProgressIndicator = true;
     settings3DS.RAEncoreMode = false;
-    settings3DS.CropEnabled = false;
-    settings3DS.CropTop = 0;
-    settings3DS.CropBottom = 0;
-    settings3DS.Overscan = false;
+    settings3DS.CropEnabled = true;
+    settings3DS.CropTop = 8;
+    settings3DS.CropBottom = 8;
+    settings3DS.Overscan = true;
+    settings3DS.Stereo3DLayers = true;
+    settings3DS.StereoLayerDepth[0] = -1;   // BG1
+    settings3DS.StereoLayerDepth[1] = -3;   // BG2
+    settings3DS.StereoLayerDepth[2] = 3;    // BG3
+    settings3DS.StereoLayerDepth[3] = -2;   // BG4
+    settings3DS.StereoLayerDepth[4] = 0;    // OBJ
+    settings3DS.StereoDepthMode = STEREO_DEPTH_AUTO;
     settings3DS.Volume = settings3DS.GlobalVolume;
     settings3DS.MaxFrameSkips = 1;
     settings3DS.CurrentSaveSlot = 1;

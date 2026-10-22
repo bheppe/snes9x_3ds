@@ -1,6 +1,11 @@
 #ifndef _3DSSETTINGS_H_
 #define _3DSSETTINGS_H_
 
+// Per-layer 3D: how the layer depths are chosen
+#define STEREO_DEPTH_MANUAL        0   // the five depth sliders
+#define STEREO_DEPTH_RECOMMENDED   1   // list for known games, otherwise a general preset
+#define STEREO_DEPTH_AUTO          2   // estimated from layer scroll speeds, flat while nothing scrolls (default)
+
 #include <stdio.h>
 #include <array>
 #include <limits.h>
@@ -179,6 +184,10 @@ typedef struct {
     int                 CropTop;                // top crop value in scanlines
     int                 CropBottom;             // bottom crop value in scanlines
     bool                Overscan;               // zoom (cropped) ingame screen to fit height
+    bool                Stereo3DLayers;         // per-game: draw each BG/OBJ layer per eye with its own depth
+    int                 StereoLayerDepth[5];    // BG1..BG4, OBJ: disparity in SNES pixels at full slider, -8..8
+                                                // (positive = out of the screen, negative = behind it, 0 = screen plane)
+    int                 StereoDepthMode;        // per-game: how the layer depths are chosen (STEREO_DEPTH_*)
 
     // --- GAME-SPECIFIC ---
     int                 MaxFrameSkips;          // 0 - disable,
