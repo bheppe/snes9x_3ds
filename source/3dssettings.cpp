@@ -85,6 +85,12 @@ void settings3dsResetGameDefaults() {
     settings3DS.CropTop = 0;
     settings3DS.CropBottom = 0;
     settings3DS.Overscan = false;
+    settings3DS.Stereo3DLayers = false;
+    settings3DS.StereoLayerDepth[0] = 2;    // BG1
+    settings3DS.StereoLayerDepth[1] = 0;    // BG2
+    settings3DS.StereoLayerDepth[2] = -2;   // BG3
+    settings3DS.StereoLayerDepth[3] = -4;   // BG4
+    settings3DS.StereoLayerDepth[4] = 1;    // OBJ
     settings3DS.Volume = settings3DS.GlobalVolume;
     settings3DS.MaxFrameSkips = 1;
     settings3DS.CurrentSaveSlot = 1;

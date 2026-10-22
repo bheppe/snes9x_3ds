@@ -179,6 +179,9 @@ typedef struct {
     int                 CropTop;                // top crop value in scanlines
     int                 CropBottom;             // bottom crop value in scanlines
     bool                Overscan;               // zoom (cropped) ingame screen to fit height
+    bool                Stereo3DLayers;         // per-game: draw each BG/OBJ layer per eye with its own depth
+    int                 StereoLayerDepth[5];    // BG1..BG4, OBJ: disparity in SNES pixels at full slider, -8..8
+                                                // (positive = out of the screen, negative = behind it, 0 = screen plane)
 
     // --- GAME-SPECIFIC ---
     int                 MaxFrameSkips;          // 0 - disable,
