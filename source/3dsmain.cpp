@@ -27,6 +27,7 @@
 #include "3dssound.h"
 #include "3dsgpu.h"
 #include "3dsimpl.h"
+#include "3dsimpl_gpu.h"
 #include "3dsui.h"
 #include "3dsui_notif.h"
 #include "3dslcd.h"
@@ -920,6 +921,55 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
     }
 
         
+    if (gpu3dsIs3DAvailable() && settings3DS.GameScreen == GFX_TOP && settings3DS.EnhancedResolution != Setting::EnhancedResolution::Wide && !settings3DS.Disable3DSlider) {
+        AddMenuDisabledOption(items, ""_s);
+        AddMenuHeader2(items, "3D Layer Depth (this game)"_s);
+
+        AddMenuCheckbox(items, "  Per-Layer 3D"_s, settings3DS.Stereo3DLayers,
+            []( int val ) {
+                if (CheckAndUpdateToggle(settings3DS.Stereo3DLayers, val)) {
+                    GPU3DS.gameScreenBufferDesync = true;
+                    menu3dsSetScreenDirty();
+                    menu3dsMarkTabDirty(TAB_SETTINGS);
+                }
+            });
+
+        if (settings3DS.Stereo3DLayers) {
+            AddMenuPicker(items, "  Depth Mode"_s,
+                "Auto: works out the depths while you play and stays flat\n"
+                "on screens where nothing scrolls (menus, name entry).\n"
+                "Recommended: fixed depths for this game if it is known,\n"
+                "otherwise a general preset.\n"
+                "Manual: set each layer's depth yourself."_s,
+                makePickerOptions({"Manual", "Recommended", "Auto"}), settings3DS.StereoDepthMode, DIALOG_TYPE_INFO, true,
+                []( int val ) {
+                    int oldMode = settings3DS.StereoDepthMode;
+
+                    if (CheckAndUpdate(settings3DS.StereoDepthMode, val)) {
+                        // Manual starts from the depths that were in use
+                        if (val == STEREO_DEPTH_MANUAL && oldMode != STEREO_DEPTH_MANUAL)
+                            gpu3dsStereoGetDepths(settings3DS.StereoLayerDepth);
+
+                        GPU3DS.gameScreenBufferDesync = true;
+                        menu3dsSetScreenDirty();
+                        menu3dsMarkTabDirty(TAB_SETTINGS);
+                    }
+                });
+
+            if (settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL) {
+                static const char *layerNames[5] = {"  BG1 Depth", "  BG2 Depth", "  BG3 Depth", "  BG4 Depth", "  Sprites (OBJ) Depth"};
+                for (int i = 0; i < 5; i++) {
+                    AddMenuGauge(items, std::string(layerNames[i]), -8, 8, settings3DS.StereoLayerDepth[i],
+                        [i]( int val ) { if (CheckAndUpdate(settings3DS.StereoLayerDepth[i], val)) menu3dsSetScreenDirty(); }, true);
+                }
+                AddMenuDisabledOption(items, "  + = out of the screen, - = behind it, 0 = screen plane"_s);
+            } else {
+                AddMenuDisabledOption(items, "  Depths are chosen automatically."_s);
+                AddMenuDisabledOption(items, "  Switch to Manual to adjust them yourself."_s);
+            }
+        }
+    }
+
     AddMenuDisabledOption(items, ""_s);
     AddMenuHeader2(items, "On-Screen Display"_s);
 
@@ -1399,6 +1449,21 @@ bool settingsReadWriteFullListByGame(bool writeMode)
     for (int i = 0; i < 8; ++i) {
         snprintf(keyBuf, sizeof(keyBuf), "Turbo%s=%%d\n", turboButtonName[i]);
         config3dsReadWriteInt32(stream, writeMode, keyBuf, &settings3DS.Turbo[i], 0, 10);
+    }
+
+    if (writeMode || detectedConfigVersion >= 1.6f) {
+        config3dsReadWriteEnum(stream, writeMode, "Stereo3DLayers=%d\n", &settings3DS.Stereo3DLayers, 0, 1);
+        for (int i = 0; i < 5; ++i) {
+            snprintf(keyBuf, sizeof(keyBuf), "StereoLayerDepth%d=%%d\n", i);
+            config3dsReadWriteInt32(stream, writeMode, keyBuf, &settings3DS.StereoLayerDepth[i], -8, 8);
+        }
+    }
+
+    if (writeMode || detectedConfigVersion >= 1.7f) {
+        config3dsReadWriteInt32(stream, writeMode, "StereoDepthMode=%d\n", &settings3DS.StereoDepthMode, STEREO_DEPTH_MANUAL, STEREO_DEPTH_AUTO);
+    } else if (!writeMode && detectedConfigVersion >= 1.6f) {
+        // game configs saved before the depth modes existed keep using their own depth sliders
+        settings3DS.StereoDepthMode = STEREO_DEPTH_MANUAL;
     }
 
     // skip reading new hotkey schema from older cfg files and map legacy key names in-place
