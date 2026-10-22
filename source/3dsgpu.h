@@ -118,7 +118,7 @@ typedef enum
     UI_NOTIF_RICH_BADGE,     // rich toast: 64x64 thumbnail, drawn scaled to 48x48
     UI_RA_INDICATOR_TEXT,    // RA indicators: progress value + overflow count
     UI_RA_PROGRESS_BADGE,    // RA progress indicator: 64x64 badge
-    UI_RA_CHALLENGE_BADGE,   // RA challenge indicators: atlas of 64x64 badges
+    UI_RA_CHALLENGE_BADGE,   // RA challenge indicator: atlas of 64x64 badges
     UI_SCANLINE,
 
     TEX_COUNT,
