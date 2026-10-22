@@ -124,7 +124,7 @@ See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
 * **Screen filter**: add "linear filtering" option ([#28](https://github.com/matbo87/snes9x_3ds/pull/28)) ([9744318](https://github.com/matbo87/snes9x_3ds/commit/9744318cc747adeaf0c7decff94c8126584fa8b4))
 
 ### Code Refactoring
-* **Performance**: revert commit 8d50f5 due to negative performance impact ([d50de94](https://github.com/matbo87/snes9x_3ds/commit/d50de943ff0415eb70f8cec3dfc7e50fe1490886))
+* **Performance**: revert commit 8d50f5 due to negative performance impact ([d50de943](https://github.com/matbo87/snes9x_3ds/commit/d50de943ff0415eb70f8cec3dfc7e50fe1490886))
 * **Shader**: remove unused shaders + adjust makefile ([3aa0377](https://github.com/matbo87/snes9x_3ds/commit/3aa03772cecf17264e4cfee00545360286c15a42))
 
 
@@ -150,7 +150,7 @@ See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
 
 ### Code Refactoring
 * **Menu**: reduce redundant code + preserve selected item index per tab ([493c1a2](https://github.com/matbo87/snes9x_3ds/commit/493c1a22b3975c7cb39a55dbd38140e5e3cd2a14), [4d6378a](https://github.com/matbo87/snes9x_3ds/commit/4d6378a507cb77571e4444abb6fbd0df3ff5f555))
-* **Dialogs**: remove unnecessary animations for a snappier appearance ([2bb82c69](https://github.com/matbo87/snes9x_3ds/commit/2bb82c69512a2ef894ee5bb049be13ba567b6e89))
+* **Dialogs**: remove unnecessary animations for a snappier appearance ([2bb82c6](https://github.com/matbo87/snes9x_3ds/commit/2bb82c69512a2ef894ee5bb049be13ba567b6e89))
 * **Second screen content**: clean up + prevent flickering when info dialog appears/disappears ([c1899df](https://github.com/matbo87/snes9x_3ds/commit/c1899df01828b9653c3c635695e61d1ce4fbeaee))
 
 
@@ -201,8 +201,12 @@ See [STEREO_LAYERS.md](STEREO_LAYERS.md) for how it works.
 
 - Added Swap Game Screen option
 - Added switch controller option like in official Virtual Console (SF2 "Training Mode", Konami cheat, ...)
-- Custom second screen image and border for every game (thanks to ramzinouri)
+- Custom second screen image and border for every game (thanks to ramzinouri and Asdolo)
 - Game Info option for second screen
 - Provide more Hotkeys (Quick Save/Load, Swap Controllers)
 - Disable Analog to Digital Type option which allows you to use circle pad for hotkeys as well
-- All game related files like cover and border.png are... 
+- All game related files like cheats or save states are now in a single folder (folder name = rom name)
+- Screenshots are now in PNG format (thanks to ramzinouri)
+- Removed BlargSNES DSP Core, updated dsp-1, added dsp-2 -3 and -4 (thanks to ramzinouri)
+
+### [bubble2k Change Log](https://github.com/bubble2k16/snes9x_3ds#change-history)
