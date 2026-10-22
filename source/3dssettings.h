@@ -271,7 +271,10 @@ typedef struct {
     bool                TurboMode;             // Effective fast-forward state (toggle and/or hold hotkeys)
 
     int                 StereoSoloLayer;       // Menu preview only: draw just this layer (0-3 = BG1-BG4, 4 = sprites), -1 = all
-    bool                StereoIsolateLayer;    // Menu: show only the layer whose depth slider is selected. Not saved.
+    int                 StereoHighlightLayer;  // Menu preview only: draw all layers, this one in a strong colour and the others in a pale
+                                               // one (0-3 = BG1-BG4, 4 = sprites), -1 = off
+    bool                StereoIsolateLayer;    // Menu: checked = show only the layer whose depth slider is selected,
+                                               // unchecked = show all layers with the selected one highlighted. Not saved.
 
     bool                LayerEnabled[8];       // Debug: per-layer enable toggle, index = LAYER_ID
                                                // (BG0-3, OBJ, Backdrop, Color Math, Brightness).
