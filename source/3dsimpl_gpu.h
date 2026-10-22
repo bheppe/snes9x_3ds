@@ -205,7 +205,13 @@ void gpu3dsDeallocLayers();
 void gpu3dsResetLayerSectionLimits(SLayerList *list);
 void gpu3dsInitLayers();
 void gpu3dsPrepareSnesScreenForNextFrame();
-void gpu3dsDrawSnesScreen();
+void gpu3dsDrawSnesScreen(bool allowStereo = true);
+
+// Per-layer stereo (Settings: "Per-Layer 3D"): when gpu3dsDrawSnesScreen defers the layer draw,
+// the scene renderer calls gpu3dsDrawSnesScreenEye() before each eye's screen draw.
+bool gpu3dsSnesLayersPendingPerEye();
+void gpu3dsDrawSnesScreenEye(bool rightEye);
+void gpu3dsEndSnesScreenEyes();
 void gpu3dsCommitLayerSection(SGPU_VBO_ID vboId, LAYER_ID id, SGPURenderState *state, bool sub = false, bool reuseVertices = false);
 
 void gpu3dsSetMode7TexturesPixelFormat(GPU_TEXCOLOR fmt);

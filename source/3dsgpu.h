@@ -79,6 +79,7 @@ typedef enum {
     ULOC_TEX_SCALE,
     ULOC_TEX_OFFSET,
     ULOC_UPDATE_FRAME,
+    ULOC_STEREO_OFFSET,
     ULOC_COUNT
 } SGPU_SHADER_ULOC;
 
@@ -464,6 +465,7 @@ bool gpu3dsFrameBeginSucceeded();
 bool gpu3dsClearScreen(gfxScreen_t screen, bool isTopStereo = false);
 
 float gpu3dsGetIOD();
+void  gpu3dsSetStereoShift(float shift);   // per-layer stereo: x shift (texture pixels) for tile draws
 float gpu3dsGetIODBase();
 bool gpu3dsIs3DAvailable();
 bool gpu3dsIsWideAvailable();
