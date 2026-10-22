@@ -118,7 +118,7 @@ typedef enum
     UI_NOTIF_RICH_BADGE,     // rich toast: 64x64 thumbnail, drawn scaled to 48x48
     UI_RA_INDICATOR_TEXT,    // RA indicators: progress value + overflow count
     UI_RA_PROGRESS_BADGE,    // RA progress indicator: 64x64 badge
-    UI_RA_CHALLENGE_BADGE,   // RA challenge indicator: atlas of 64x64 badges
+    UI_RA_CHALLENGE_BADGE,   // RA challenge indicators: atlas of 64x64 badges
     UI_SCANLINE,
 
     TEX_COUNT,
@@ -133,6 +133,7 @@ typedef enum
     TEX_ENV_BLEND_COLOR_TEXTURE0,
     TEX_ENV_MODULATE_COLOR,
     TEX_ENV_MODULATE_COLOR_BRIGHT,   // texture * vertex colour, then doubled (menu layer preview)
+    TEX_ENV_REPLACE_TEXTURE0_TINT_COLOR_ALPHA,   // BG/OBJ tile layers: texture * gpu3dsLayerTintColor, then doubled; alpha as COLOR_ALPHA
     TEX_ENV_UNSET,
 } SGPU_TEX_ENV;
 
@@ -249,7 +250,7 @@ typedef union {
         SGPU_TARGET_ID target : BW_TARGET;
 
         SGPU_ALPHA_BLENDINGMODE alphaBlending : BW_ALPHA_BLEND;
-        SGPU_TEX_ENV textureEnv : BW_TEX_ENV; // max enum value = 7
+        SGPU_TEX_ENV textureEnv : BW_TEX_ENV; // max enum value = 15
 
         SGPU_ALPHA_TEST alphaTest : BW_ALPHA_TEST;
         SGPU_STATE textureOffset : BW_TEX_OFFSET;
@@ -355,6 +356,9 @@ void gpu3dsSetTextureEnvironmentReplaceTexture0WithVertexAlpha();
 void gpu3dsSetTextureEnvironmentBlendColorOnTexture();
 void gpu3dsSetTextureEnvironmentModulateColor();
 void gpu3dsSetTextureEnvironmentModulateColorBright();
+void gpu3dsSetTextureEnvironmentReplaceTexture0TintColorAlpha();
+// constant colour used by TEX_ENV_REPLACE_TEXTURE0_TINT_COLOR_ALPHA, 0xAABBGGRR (the TEV constant register layout)
+extern u32 gpu3dsLayerTintColor;
 
 void gpu3dsBindTexture(SGPU_TEXTURE_ID textureId);
 
@@ -426,6 +430,9 @@ static inline void gpu3dsApplyRenderState(SGPURenderState *state)
                 break;
             case TEX_ENV_MODULATE_COLOR_BRIGHT:
                 gpu3dsSetTextureEnvironmentModulateColorBright();
+                break;
+            case TEX_ENV_REPLACE_TEXTURE0_TINT_COLOR_ALPHA:
+                gpu3dsSetTextureEnvironmentReplaceTexture0TintColorAlpha();
                 break;
             default:
                 gpu3dsSetTextureEnvironmentReplaceColor();
