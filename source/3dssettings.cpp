@@ -27,6 +27,7 @@ void settings3dsResetGlobalDefaults() {
     settings3DS.Intensity3D = Setting::Intensity3D::Standard;
     settings3DS.LogFileEnabled = false;
     settings3DS.StereoSoloLayer = -1;
+    settings3DS.StereoHighlightLayer = -1;
     settings3DS.StereoIsolateLayer = true;
 
     settings3DS.ScreenStretch = Setting::ScreenStretch::Full;
