@@ -543,7 +543,7 @@ void menu3dsDrawMenu(std::vector<SMenuTab>& menuTabs, int& currentMenuTab, int m
             // multi color buttons for dark mode theme
             buttonColor = button.color;
         }
- 
+        
         bool isFileTab = menu3dsIsFileTab(currentMenuTab, menuTabs);
         bool inSubPage = currentTab->IsSubPage();
         bool visible =
@@ -1233,10 +1233,14 @@ int menu3dsMenuSelectItem(SMenuTab& dialogTab, bool& isDialog, int& currentMenuT
                 currentTab->SelectedItemIndex < static_cast<int>(currentTab->MenuItems.size()))
                 previewRow = currentTab->MenuItems[currentTab->SelectedItemIndex].HighlightLayer;
 
+            // checked: show only that layer; unchecked: show all layers with that one highlighted
             int soloLayer = (previewRow >= 0 && settings3DS.StereoIsolateLayer) ? previewRow : -1;
+            int highlightLayer = (previewRow >= 0 && !settings3DS.StereoIsolateLayer) ? previewRow : -1;
 
-            if (settings3DS.StereoSoloLayer != soloLayer || lastPreviewRow != previewRow) {
+            if (settings3DS.StereoSoloLayer != soloLayer || settings3DS.StereoHighlightLayer != highlightLayer ||
+                lastPreviewRow != previewRow) {
                 settings3DS.StereoSoloLayer = soloLayer;
+                settings3DS.StereoHighlightLayer = highlightLayer;
                 lastPreviewRow = previewRow;
                 GPU3DS.gameScreenBufferDesync = true;
                 gameScreenDirty = true;
@@ -1301,6 +1305,7 @@ int menu3dsMenuSelectItem(SMenuTab& dialogTab, bool& isDialog, int& currentMenuT
     // never leave the layer preview behind when the menu is left: the game screen texture still holds it,
     // so redraw the full picture once
     settings3DS.StereoSoloLayer = -1;
+    settings3DS.StereoHighlightLayer = -1;
     lastPreviewRow = -1;
 
     if (layerPreviewShown && settings3DS.isRomLoaded) {
