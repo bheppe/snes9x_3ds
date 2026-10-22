@@ -936,8 +936,8 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
 
         if (settings3DS.Stereo3DLayers) {
             AddMenuPicker(items, "  Depth Mode"_s,
-                "Auto: works out the depths while you play and stays flat\n"
-                "on screens where nothing scrolls (menus, name entry).\n"
+                "Auto: works out the depths while you play and uses the\n"
+                "Recommended depths where nothing scrolls (menus, name entry).\n"
                 "Recommended: fixed depths for this game if it is known,\n"
                 "otherwise a general preset.\n"
                 "Manual: set each layer's depth yourself."_s,
@@ -957,12 +957,43 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
                 });
 
             if (settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL) {
-                static const char *layerNames[5] = {"  BG1 Depth", "  BG2 Depth", "  BG3 Depth", "  BG4 Depth", "  Sprites (OBJ) Depth"};
+                AddMenuCheckbox(items, "  Show Only Selected Layer"_s, settings3DS.StereoIsolateLayer,
+                    []( int val ) {
+                        settings3DS.StereoIsolateLayer = val != 0;
+                        GPU3DS.gameScreenBufferDesync = true;
+                        menu3dsSetScreenDirty();
+                    });
+
+                // what each layer usually holds; games differ, so the names are hints
+                // (the colour is the tint the layer gets in the top-screen preview)
+                static const char *layerNames[5] = {
+                    "  BG1 red: main layer", "  BG2 blue: back layer", "  BG3 yellow: HUD/text",
+                    "  BG4 pink: extra", "  Sprites green: actors"
+                };
                 for (int i = 0; i < 5; i++) {
                     AddMenuGauge(items, std::string(layerNames[i]), -8, 8, settings3DS.StereoLayerDepth[i],
                         [i]( int val ) { if (CheckAndUpdate(settings3DS.StereoLayerDepth[i], val)) menu3dsSetScreenDirty(); }, true);
+                    items.back().HighlightLayer = i;
                 }
+                items.emplace_back([](int val) {
+                    int rec[5];
+                    gpu3dsStereoGetRecommended(rec);
+
+                    bool changed = false;
+                    for (int i = 0; i < 5; i++)
+                        changed |= CheckAndUpdate(settings3DS.StereoLayerDepth[i], rec[i]);
+
+                    if (changed) {
+                        GPU3DS.gameScreenBufferDesync = true;
+                        menu3dsSetScreenDirty();
+                    }
+                    menu3dsMarkTabDirty(TAB_SETTINGS);   // rebuild so the sliders show the new values
+                }, MenuItemType::Action, "  Reset Depths to Recommended"_s, ""_s);
+
                 AddMenuDisabledOption(items, "  + = out of the screen, - = behind it, 0 = screen plane"_s);
+                AddMenuDisabledOption(items, "  Layer names are typical; games differ. With the box above"_s);
+                AddMenuDisabledOption(items, "  checked, the top screen shows only the selected layer"_s);
+                AddMenuDisabledOption(items, "  in the colour named next to its slider."_s);
             } else {
                 AddMenuDisabledOption(items, "  Depths are chosen automatically."_s);
                 AddMenuDisabledOption(items, "  Switch to Manual to adjust them yourself."_s);
