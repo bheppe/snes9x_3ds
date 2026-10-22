@@ -333,7 +333,7 @@ static int  stereoEye = 0; // -1 = left eye pass, +1 = right eye pass, 0 = norma
 //   Auto         estimates each layer's depth from how fast it scrolls (parallax): the fastest
 //                layer is the play field, slower layers are farther away, a layer that never
 //                scrolls is the HUD (BG3) or a fixed backdrop (farthest). While nothing scrolls
-//                (menus, name entry, title screens) everything fades to flat.
+//                (menus, name entry, title screens) it goes back to the Recommended depths.
 // All depths are BG1..BG4, OBJ in SNES pixels at full slider, -8..8.
 //---------------------------------------------------------
 struct StereoGameDepths {
@@ -381,10 +381,10 @@ static void stereoAutoReset(int mode)
     stereoAuto.lastMode = mode;
     stereoAuto.lastCrc = Memory.ROMCRC32;
 
-    // Auto starts flat and gains depth once layers scroll; the other modes start from the list
+    // every mode starts from the Recommended depths; Auto moves away from them once layers scroll
     for (int i = 0; i < 5; i++) {
-        stereoAuto.current[i] = mode == STEREO_DEPTH_AUTO ? 0 : rec[i];
-        stereoAuto.target[i] = stereoAuto.current[i];
+        stereoAuto.current[i] = rec[i];
+        stereoAuto.target[i] = rec[i];
     }
 }
 
@@ -420,9 +420,9 @@ static void stereoUpdateDepths(SLayerList *list)
     }
 
     // ---- Auto ----
-    // flat unless layers are scrolling (fades back to flat on menus and static screens)
+    // the Recommended depths unless layers are scrolling (menus, title screens and static scenes go back to them)
     for (int i = 0; i < 5; i++)
-        stereoAuto.target[i] = 0;
+        stereoAuto.target[i] = rec[i];
 
     bool present[4];
     for (int n = 0; n < 4; n++) {
@@ -468,7 +468,7 @@ static void stereoUpdateDepths(SLayerList *list)
         }
     }
 
-    // until something has really scrolled there is nothing to measure: stay flat
+    // until something has really scrolled there is nothing to measure: stay on the Recommended depths
     if (ref >= 0 && refPeak >= 0.75f) {
         const int playDepth = -1;
 
@@ -499,6 +499,16 @@ static void stereoUpdateDepths(SLayerList *list)
             else if (stereoAuto.current[i] > stereoAuto.target[i]) stereoAuto.current[i]--;
         }
     }
+}
+
+// The depths Recommended mode uses for the current game (the list entry, or the general preset).
+void gpu3dsStereoGetRecommended(int out[5])
+{
+    s8 rec[5];
+    stereoGetRecommended(rec);
+
+    for (int i = 0; i < 5; i++)
+        out[i] = rec[i];
 }
 
 // The depths the renderer uses right now (Manual: the sliders).
@@ -532,6 +542,25 @@ static void stereoSetLayerShift(float shift)
     gpu3dsSetStereoShift(shift);
 }
 
+// Widest shift (in texture pixels, either eye) of any layer right now. A shifted layer leaves
+// that many columns empty at one screen edge, so the scene renderer crops this much from both sides.
+// All five layers count whether or not they are on screen, so the crop does not pulse when a layer
+// (like the HUD) comes and goes.
+float gpu3dsStereoEdgeCrop()
+{
+    float widest = 0.0f;
+
+    for (int id = LAYER_BG0; id <= LAYER_OBJ; id++) {
+        float left = fabsf(stereoLayerShift((LAYER_ID)id, false));
+        float right = fabsf(stereoLayerShift((LAYER_ID)id, true));
+
+        if (left > widest) widest = left;
+        if (right > widest) widest = right;
+    }
+
+    return widest;
+}
+
 void gpu3dsDrawLayers(SLayerList *list) {
     // draw window_lr into depth buffer first
     SLayer *layer = &list->layers[LAYER_WINDOW_LR];
@@ -557,6 +586,10 @@ void gpu3dsDrawLayers(SLayerList *list) {
             int to = from + layer->sectionsByTarget[i];
 
             if (to <= from) continue;
+
+            // menu preview of one layer (Settings > 3D Layer Depth): skip the other BGs / sprites
+            if (id <= LAYER_OBJ && settings3DS.StereoSoloLayer >= 0 && id != (LAYER_ID)settings3DS.StereoSoloLayer)
+                continue;
 
             GPU3DS.currentRenderState.depthTest = id < LAYER_OBJ ? SGPU_STATE_ENABLED : SGPU_STATE_DISABLED;
 
