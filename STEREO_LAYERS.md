@@ -11,18 +11,18 @@ Enhanced Resolution "Standard", Scaling "Fullscreen", Scale Filter "Smooth" and 
 Not tested on New 3DS.
 
 ## Plug and play
-New games start with **Per-Layer 3D on** and **Depth Mode = Auto**, and new installs start with
+New games start with **Per-Layer 3D on** and **Depth Mode = Recommended**, and new installs start with
 the video settings above, so you just load a game. The 3D slider on the 3DS still controls how strong the effect is.
 
 ## Depth Mode
 Open the emulator menu, **Settings** tab, section **3D Layer Depth (this game)**. The mode is saved per game.
 
-- **Auto** (default): works out the depths while you play. It measures how fast each background
+- **Auto**: works out the depths while you play. It measures how fast each background
   layer scrolls: the fastest layer is the play field, slower layers are farther away, a layer that
   never scrolls is the HUD (BG3) or a fixed backdrop. On screens where nothing scrolls (title
   screens, menus, name entry) it fades to flat, and depth fades back in once layers scroll.
   If you stand still in a game for about 40 seconds the depth fades out until you move.
-- **Recommended**: fixed depths. Games in the built-in list (by ROM CRC32, currently ActRaiser USA)
+- **Recommended** (default): fixed depths. Games in the built-in list (by ROM CRC32, currently ActRaiser USA)
   use depths checked by hand; every other game gets a general preset
   (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0).
 - **Manual**: set a depth (-8..8) for BG1, BG2, BG3, BG4 and Sprites (OBJ). Positive = toward you,

@@ -3,8 +3,8 @@
 
 // Per-layer 3D: how the layer depths are chosen
 #define STEREO_DEPTH_MANUAL        0   // the five depth sliders
-#define STEREO_DEPTH_RECOMMENDED   1   // list for known games, otherwise a general preset
-#define STEREO_DEPTH_AUTO          2   // estimated from layer scroll speeds, flat while nothing scrolls (default)
+#define STEREO_DEPTH_RECOMMENDED   1   // list for known games, otherwise a general preset (default)
+#define STEREO_DEPTH_AUTO          2   // estimated from layer scroll speeds, flat while nothing scrolls
 
 #include <stdio.h>
 #include <array>
