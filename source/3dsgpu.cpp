@@ -193,6 +193,31 @@ void gpu3dsSetTextureEnvironmentModulateColorBright() {
     gpu3dsClearTextureEnv(2);
 }
 
+u32 gpu3dsLayerTintColor = 0xFFFFFFFF;
+
+// Tile layers (BG1-BG4, sprites) with the menu's layer highlight: rgb = texture * constant colour, doubled
+// (so the constant is half of the wanted multiplier); alpha as in ReplaceTexture0WithColorAlpha.
+void gpu3dsSetTextureEnvironmentReplaceTexture0TintColorAlpha() {
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_TEXTURE0, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_MODULATE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE0);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+    C3D_TexEnvColor(env, gpu3dsLayerTintColor);
+
+    C3D_TexEnv* env1 = C3D_GetTexEnv(1);
+    C3D_TexEnvInit(env1);
+
+    C3D_TexEnvSrc(env1, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env1, C3D_RGB, GPU_ADD);
+    C3D_TexEnvSrc(env1, C3D_Alpha, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env1, C3D_Alpha, GPU_REPLACE);
+
+    gpu3dsClearTextureEnv(2);
+}
+
 void gpu3dsSetTextureEnvironmentBlendColorOnTexture() {
     C3D_TexEnv* env = C3D_GetTexEnv(0);
     C3D_TexEnvInit(env);
