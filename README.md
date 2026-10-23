@@ -1,3 +1,19 @@
+# Snes9x 3D (per-layer stereoscopic 3D for 3DS)
+
+**This fork by bheppe adds real per-layer stereoscopic 3D to SNES games on the
+3DS.** Each SNES layer (BG1-BG4 and sprites) is drawn at its own depth, so
+backgrounds, characters and HUDs separate when you raise the 3D slider.
+Tested on Old 3DS.
+
+- **Download:** [Releases](https://github.com/bheppe/snes9x_3ds/releases) (install the `.cia` with FBI)
+- **3D settings:** in the emulator's settings, **Depth Mode**: Manual, Recommended or Auto
+- **Discord** (help, game reports, test builds): https://discord.gg/pBWY3fRgnU
+- **Sister project:** [gpSP 3D](https://github.com/bheppe/gpsp-3d), the same idea for GBA games
+- The 3D work is on the `per-layer-3d` branch. Everything below is the
+  upstream readme by matbo87.
+
+---
+
 # Snes9x for 3DS
 
 ## Overview
