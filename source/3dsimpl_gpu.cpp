@@ -355,6 +355,25 @@ static const StereoGameDepths stereoGameTable[] = {
     // BG2 -4 keeps the mountain layer from looking flat (CRC32s and depths from SWChris on r/3dshomebrew)
     { 0xD138F224, {  0, -4,  3, -2, 0 } },   // Yoshi's Island
     { 0xB19ED489, {  0, -4,  3, -2, 0 } },   // Super Mario World
+
+    // More games, CRC32s and depths from SWChris (r/3dshomebrew and the project Discord)
+    { 0x925637C7, {  0, -4, -8,  0, 0 } },   // Super Mario All-Stars (the Super Mario Bros 1/2 and Lost Levels depths,
+                                             //   they cover the most games; Super Mario Bros 3 looks best at BG2 -8, BG3 0)
+    { 0xCD80DB86, {  0,  2, -4, -8, 0 } },   // Super Mario Kart
+    { 0x231F0F67, { -3, -3,  3,  0, 0 } },   // UN Squadron (foreground elements share a layer with the background, so they look inverted)
+    { 0x383858C7, {  0, -8,  3,  0, 0 } },   // Uniracers
+    { 0x468D8CD0, { -1, -1,  3,  0, 0 } },   // Bill Laimbeer's Combat Basketball
+    { 0x3A4A47EB, {  0, -4, -8,  0, 1 } },   // Earthworm Jim
+    { 0x393DE197, {  0, -4, -8,  0, 0 } },   // Earthworm Jim 2 (BG3 priority flips in the Lorenzo's Soil and ISO 9000 levels)
+    { 0x124D8E4D, { -1, -3,  3,  0, 0 } },   // Aladdin
+    { 0x4AAFA462, {  1,  0,  3,  0, 1 } },   // Goof Troop
+    { 0x8FC4E6D0, {  0, -4,  3,  0, 0 } },   // Star Fox
+    { 0x87653732, { -5,  0,  0,  0, 2 } },   // Star Fox 2 (also starts with Crop Top/Bottom Scanlines 0, see 3dssettings.cpp)
+
+    // The Legend of Zelda: A Link to the Past changes which layer Link walks on from room to room, so no single
+    // setting fits every scene. This is SWChris's setting for open scenes (no layers Link can walk under); rooms with
+    // bridges, pits or stairs need other depths (see STEREO_LAYERS.md, Game notes).
+    { 0x777AAC2F, {  0,  0,  1,  0, 0 } },   // The Legend of Zelda: A Link to the Past
 };
 
 // General preset, checked by hand on Donkey Kong Country, Secret of Mana and Super Metroid.
