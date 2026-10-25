@@ -88,6 +88,21 @@ void settings3dsResetGameDefaults() {
     settings3DS.CropTop = 8;
     settings3DS.CropBottom = 8;
     settings3DS.Overscan = true;
+
+    // Games that draw text boxes at the very top or bottom of the picture start with no scanlines cropped
+    // (an existing game config still wins, and "Reset Config" brings this back)
+    {
+        static const u32 noCropGames[] = {
+            0x87653732,     // Star Fox 2 (SWChris: the default crop cuts off the text boxes)
+        };
+        for (size_t i = 0; i < sizeof(noCropGames) / sizeof(noCropGames[0]); i++) {
+            if (Memory.ROMCRC32 == noCropGames[i]) {
+                settings3DS.CropTop = 0;
+                settings3DS.CropBottom = 0;
+            }
+        }
+    }
+
     settings3DS.Stereo3DLayers = true;
     settings3DS.StereoLayerDepth[0] = -1;   // BG1
     settings3DS.StereoLayerDepth[1] = -3;   // BG2
