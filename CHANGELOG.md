@@ -1,6 +1,12 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers5 (per-layer 3D fork, based on v1.61)
+
+### Changes
+* 12 more games in the Recommended list, with CRC32s and depths from SWChris: Super Mario All-Stars, Super Mario Kart, UN Squadron, Uniracers, Bill Laimbeer's Combat Basketball, Earthworm Jim, Earthworm Jim 2, Aladdin, Goof Troop, Star Fox, Star Fox 2 and The Legend of Zelda: A Link to the Past (its open-scene setting; the depths for bridges, stairs and the Master Sword glade are in the new Game notes section of [STEREO_LAYERS.md](STEREO_LAYERS.md)).
+* Star Fox 2 starts with Crop Top Scanlines and Crop Bottom Scanlines at 0, so the text boxes are no longer cut off (a saved game config keeps its own values). Suggested by SWChris.
+
 ## v1.61-layers4 (per-layer 3D fork, based on v1.61)
 
 ### Changes

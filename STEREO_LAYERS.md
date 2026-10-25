@@ -22,11 +22,13 @@ Open the emulator menu, **Settings** tab, section **3D Layer Depth (this game)**
   never scrolls is the HUD (BG3) or a fixed backdrop. On screens where nothing scrolls (title
   screens, menus, name entry) it uses the Recommended depths (below), and moves to its own estimate
   once layers scroll. If you stand still in a game for about 40 seconds it drifts back to the Recommended depths.
-- **Recommended** (default): fixed depths. Games in the built-in list (by ROM CRC32: ActRaiser USA, Yoshi's Island
-  and Super Mario World) use depths checked by hand; every other game gets a general preset
+- **Recommended** (default): fixed depths. Games in the built-in list (matched by ROM CRC32, see `stereoGameTable` in
+  `source/3dsimpl_gpu.cpp`: ActRaiser USA, Yoshi's Island, Super Mario World, Super Mario All-Stars, Super Mario Kart,
+  UN Squadron, Uniracers, Bill Laimbeer's Combat Basketball, Earthworm Jim 1 and 2, Aladdin, Goof Troop, Star Fox,
+  Star Fox 2 and The Legend of Zelda: A Link to the Past) use depths checked by hand; every other game gets a general preset
   (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0). BG1 sits one step behind the sprites so characters pop out of the
-  play field. Sprites share one depth, so in some games characters can look slightly like they float; the built-in
-  list has Yoshi's Island and Super Mario World at BG1 0 for that reason, and you can set BG1 to 0 in Manual for any other game.
+  play field. Sprites share one depth, so in some games characters can look slightly like they float; many games in the
+  built-in list are at BG1 0 for that reason, and you can set BG1 to 0 in Manual for any other game.
 - **Manual**: set a depth (-8..8) for BG1, BG2, BG3, BG4 and Sprites (OBJ). Positive = toward you,
   negative = away. Switching to Manual starts from the depths that were in use. Each slider is labelled with
   what its layer usually holds (BG1 main layer, BG2 back layer, BG3 HUD / text, BG4 extra, Sprites characters),
@@ -41,6 +43,26 @@ Example Manual depths for ActRaiser action stages: BG1 -1, BG2 -4, BG3 +3, BG4 -
 (BG1 trees/grass, BG2 far background, BG3 HUD/pause text).
 
 Game configs saved by the first release (v1.61-layers1) keep working: they load as Manual with their own depths.
+
+## Game notes
+Depths and notes for the built-in list come from SWChris, who tested them on a New 3DS XL.
+- **Super Mario All-Stars**: the Recommended depths (BG1 0, BG2 -4, BG3 -8, BG4 0, Sprites 0) suit Super Mario Bros 1, 2
+  and The Lost Levels. For Super Mario Bros 3 use Manual: BG1 0, BG2 -8, BG3 0, BG4 0, Sprites 0. Auto gets confused
+  in Super Mario Bros 3 because BG1 and BG3 are layered over each other.
+- **UN Squadron**: foreground elements share a layer with the background, so they look inverted.
+- **Earthworm Jim 2**: in the Lorenzo's Soil and ISO 9000 levels the game flips BG3's priority, so BG3 becomes the
+  foreground there and the depths look wrong. Separate depths for high and low priority tiles on each layer would
+  fix this and is on the list of ideas.
+- **Star Fox 2**: the default Crop Top/Bottom Scanlines cut off the text boxes, so this game starts with both at 0
+  (Settings tab, **Crop & Overscan**). A saved game config keeps whatever you set.
+- **The Legend of Zelda: A Link to the Past** uses its layers differently from room to room, so no single setting
+  fits every scene. The Recommended entry is Setting A, for open scenes with no layers Link can walk under (BG1 0,
+  BG2 0, BG3 +1, BG4 0, Sprites 0). For the other cases switch to Manual and use:
+  - Setting B, Link on a bridge or high wall: BG1 -2, BG2 0, BG3 +1, BG4 0, Sprites 0.
+  - Setting C, Link can walk under a bridge or overhang, or is on stairs: BG1 -2, BG2 0, BG3 +1, BG4 0, Sprites -1.
+  - Setting D, Master Sword glade: BG1 -2, BG2 0, BG3 +3, BG4 0, Sprites -1 (Sprites 0 while Link stands on the white platform).
+  - With any of these, sprites on the layer Link is not on look odd, but Link looks right. Switching depths per scene
+    would need per-scene profiles, which this fork does not have yet.
 
 ## Adding a game to the Recommended list
 Open **Emulator** tab, **ROM Info**, note the CRC32. Add a line to `stereoGameTable` in
