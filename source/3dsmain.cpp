@@ -48,6 +48,38 @@ static bool cfgFileAvailable[2]; // global config, game config
 static u32 lastLoadedRomCRC = 0;
 static const DirectoryEntry* selectedEntry = nullptr;
 
+//-------------------------------------------------------
+// HOME Menu icons (forwarders, e.g. made by gpSP 3D's Icon Maker) start the
+// emulator with a game: they write its full path to LAUNCH_FILE first. The
+// file is read and deleted at startup, and the game loaded on the first
+// pass through the menu, as if picked in the file list.
+//-------------------------------------------------------
+#define LAUNCH_FILE "sdmc:/3ds/snes9x_3ds/launch.txt"
+static char launchFilename[NAME_MAX + 1] = "";
+
+static void readLaunchFile()
+{
+    char path[PATH_MAX] = "";
+    FILE* f = fopen(LAUNCH_FILE, "r");
+    if (!f)
+        return;
+    if (!fgets(path, sizeof(path), f))
+        path[0] = '\0';
+    fclose(f);
+    remove(LAUNCH_FILE);    // once only: starting the app normally shows the menu
+
+    path[strcspn(path, "\r\n")] = '\0';
+    char* slash = strrchr(path, '/');
+    if (!slash || !slash[1] || !IsFileExists(path)) {
+        log3dsWrite("[launch] ignored: %s", path);
+        return;
+    }
+    snprintf(launchFilename, sizeof(launchFilename), "%s", slash + 1);
+    slash[1] = '\0';
+    file3dsSetCurrentDir(path);
+    log3dsWrite("[launch] %s%s", path, launchFilename);
+}
+
 // static globals to prevent heap fragmentation and speed up menu access.
 // note: not thread-safe, but safe here due to sequential menu/emulator execution
 static std::vector<SMenuTab> menuTabs;
@@ -2255,6 +2287,15 @@ void showMenu() {
     // Pause cancels transient achievement toasts.
     ra3dsDropUnlockToast();
 
+    // started from a HOME Menu icon: load its game right away
+    if (launchFilename[0]) {
+        static DirectoryEntry launchEntry;
+        launchEntry = DirectoryEntry(launchFilename, FileEntryType::File);
+        launchFilename[0] = '\0';
+        const DirectoryEntry* entry = &launchEntry;
+        onDirectoryEntrySelected(dialogTab, isDialog, currentMenuTab, runNextGame, cheatMenu, entry);
+    }
+
     // Avoid flashing the untouched pre-pause buffer on resume.
     GPU3DS.gameScreenBufferDesync = true;
 
@@ -2665,6 +2706,7 @@ int main()
     
     img3dsOpenThumbnailCache();
     gfxSetDoubleBuffering(settings3DS.SecondScreen, true);
+    readLaunchFile();
 
     GPU3DS.emulatorState = EMUSTATE_PAUSEMENU;
     

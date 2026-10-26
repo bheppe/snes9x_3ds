@@ -8,6 +8,9 @@ Tested on Old 3DS.
 - **Download:** [Releases](https://github.com/bheppe/snes9x_3ds/releases) (install the `.cia` with FBI)
 - **3D settings:** in the emulator's settings, **Depth Mode**: Manual, Recommended or Auto
 - **Discord** (help, game reports, test builds): https://discord.gg/pBWY3fRgnU
+- **HOME Menu icons per game:** install **Icon Maker** (`iconmaker.cia`, on the Releases page) to put
+  SNES (and GBA) games on the HOME Menu right from the 3DS. Each icon opens Snes9x 3D straight into its game.
+  Your own pictures: `Game.png` (icon) and `Game.banner.png` (256x128 banner) next to the game.
 - **Sister project:** [gpSP 3D](https://github.com/bheppe/gpsp-3d), the same idea for GBA games
 - The 3D work is on the `per-layer-3d` branch. Everything below is the
   upstream readme by matbo87.

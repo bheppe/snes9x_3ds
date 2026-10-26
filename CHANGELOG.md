@@ -1,6 +1,11 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers6 (per-layer 3D fork, based on v1.61)
+
+### Changes
+* **HOME Menu icons for SNES games.** Snes9x 3D can now be started straight into a game from its own HOME Menu icon. Make the icons on the 3DS with **Icon Maker** (attached to this release; source in [gpsp-3d](https://github.com/bheppe/gpsp-3d/tree/main/iconmaker)): pick a game, press A, and its icon and banner go on the HOME Menu. An icon writes the game's path to `sdmc:/3ds/snes9x_3ds/launch.txt` and starts the CIA; at startup Snes9x 3D reads and deletes that file and loads the game as if it had been picked in the file list (loading screen, auto save state, RetroAchievements). Started normally, it shows the menu as before.
+
 ## v1.61-layers5 (per-layer 3D fork, based on v1.61)
 
 ### Changes
