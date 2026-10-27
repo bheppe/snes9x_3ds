@@ -73,8 +73,8 @@ Open **Emulator** tab, **ROM Info**, note the CRC32. Add a line to `stereoGameTa
   layer use, can look wrong. Switch to Manual for those.
 - Mode 7 scenes get no receding depth (BG1's shift at most). Super Mario Kart and F-Zero stay mostly flat.
 - All sprites share one depth. Window/clip masks are not shifted; no per-priority depth within a layer.
-- Shifted layers leave a thin empty strip at the screen edges. The picture is cropped slightly at the left
-  and right by the widest layer shift to hide it, so a game with large depths shows a little less at the sides.
+- Shifted layers would leave an empty strip at the screen edges, so the layers are built a few tile columns wider
+  than the screen and nothing is cropped.
 
 ## Building a CIA
 The CIA uses its own title ID and name ("Snes9x 3DS Layers") so it installs next to the original Snes9x 3DS
