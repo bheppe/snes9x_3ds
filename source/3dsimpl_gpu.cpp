@@ -554,8 +554,17 @@ void gpu3dsStereoGetDepths(int out[5])
                      : stereoAuto.current[i];
 }
 
-// Horizontal shift (in texture pixels) for a layer in one eye. The disparity between the eyes
+// One eye's horizontal shift, in whole SNES pixels, for a layer depth. The disparity between the eyes
 // is a whole number of SNES pixels so tiles stay on the pixel grid; an odd pixel goes to the left eye.
+static int stereoDepthShift(int depth, bool rightEye)
+{
+    float disparity = depth * osGet3DSliderState() * (gpu3dsGetIODBase() / 3.0f);
+    int d = (int)lroundf(disparity);
+
+    return rightEye ? -(int)floorf(d / 2.0f) : (int)ceilf(d / 2.0f);
+}
+
+// Horizontal shift (in texture pixels) for a layer in one eye.
 static float stereoLayerShift(LAYER_ID id, bool rightEye)
 {
     if (id > LAYER_OBJ)
@@ -564,35 +573,42 @@ static float stereoLayerShift(LAYER_ID id, bool rightEye)
     int depths[5];
     gpu3dsStereoGetDepths(depths);
 
-    float disparity = depths[id] * osGet3DSliderState() * (gpu3dsGetIODBase() / 3.0f);
-    int d = (int)lroundf(disparity);
-    int shift = rightEye ? -(int)floorf(d / 2.0f) : (int)ceilf(d / 2.0f);
+    return (float)(stereoDepthShift(depths[id], rightEye) * (GPU3DSExt.renderWidth / 256));
+}
 
-    return (float)(shift * (GPU3DSExt.renderWidth / 256));
+// Extra 8 pixel tile columns the layer builders add past each screen edge. A shifted layer would
+// otherwise leave an empty strip as wide as its shift at one edge; with the extra columns the tiles
+// that move in come from the real tilemap. Sized for the widest shift of any layer in either eye
+// (Auto also counts the depth it is moving toward), and 0 when 3D is off or the slider is at zero,
+// so then the frame is built exactly as before.
+int gpu3dsStereoEdgeTiles()
+{
+    if (!settings3DS.Stereo3DLayers || gpu3dsGetIOD() <= 0.0f)
+        return 0;
+
+    int widest = 0;
+
+    for (int id = LAYER_BG0; id <= LAYER_OBJ; id++) {
+        int depth = settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL
+                        ? settings3DS.StereoLayerDepth[id]
+                        : stereoAuto.current[id];
+        int other = settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL ? depth : stereoAuto.target[id];
+
+        for (int eye = 0; eye < 2; eye++) {
+            int a = abs(stereoDepthShift(depth, eye != 0));
+            int b = abs(stereoDepthShift(other, eye != 0));
+
+            if (a > widest) widest = a;
+            if (b > widest) widest = b;
+        }
+    }
+
+    return (widest + 7) / 8;
 }
 
 static void stereoSetLayerShift(float shift)
 {
     gpu3dsSetStereoShift(shift);
-}
-
-// Widest shift (in texture pixels, either eye) of any layer right now. A shifted layer leaves
-// that many columns empty at one screen edge, so the scene renderer crops this much from both sides.
-// All five layers count whether or not they are on screen, so the crop does not pulse when a layer
-// (like the HUD) comes and goes.
-float gpu3dsStereoEdgeCrop()
-{
-    float widest = 0.0f;
-
-    for (int id = LAYER_BG0; id <= LAYER_OBJ; id++) {
-        float left = fabsf(stereoLayerShift((LAYER_ID)id, false));
-        float right = fabsf(stereoLayerShift((LAYER_ID)id, true));
-
-        if (left > widest) widest = left;
-        if (right > widest) widest = right;
-    }
-
-    return widest;
 }
 
 // Menu highlight colours for BG1, BG2, BG3, BG4, sprites: red, blue, yellow, pink, green (the colours named on the

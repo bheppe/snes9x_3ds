@@ -897,14 +897,6 @@ void impl3dsSceneRender(bool firstFrame, bool paused) {
 	float iod = layeredStereo ? 0.0f : gpu3dsGetIOD();
 	bool renderRightEye = layeredStereo || iod != 0.0f;
 
-	// Shifted layers leave a thin empty strip at the screen edges: crop the picture by the widest shift.
-	// The paused picture gets the same crop, so opening the menu does not make the picture jump.
-	if (layeredStereo || (paused && settings3DS.Stereo3DLayers && gpu3dsGetIOD() > 0.0f)) {
-		float crop = gpu3dsStereoEdgeCrop();
-		gameScreenViewport.tx0 += crop;
-		gameScreenViewport.tx1 -= crop;
-	}
-
 	bool balancedFilterEnabled =
 		settings3DS.ScreenFilter == Setting::ScreenFilter::Balanced && !screenshot.dirty &&
 		(settings3DS.ScreenStretch != Setting::ScreenStretch::None || settings3DS.Overscan);

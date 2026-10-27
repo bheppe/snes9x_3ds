@@ -928,6 +928,21 @@ inline void __attribute__((always_inline)) S9xDrawHiresBGFullTileHardwareInline 
 // Draw offset-per-tile background.
 //-------------------------------------------------------------------
 
+// Edge tile columns for the layer about to be built (0 when not in stereo). When the frame has
+// already used three quarters of the vertex budget the margin is dropped, so it can't push real
+// tiles out of the buffer (R10): that layer then shows empty strips at the edges.
+static int S9xStereoEdgeTiles()
+{
+	int edgeTiles = gpu3dsStereoEdgeTiles();
+	// vertices already committed this frame (the count that gpu3dsCommitLayerSection caps), plus
+	// the section being built
+	u32 used = GPU3DSExt.layerList.verticesTotal + GPU3DS.vertices[VBO_SCENE_TILE].count;
+	if (edgeTiles && used > MAX_VERTICES - MAX_VERTICES / 4) {
+		return 0;
+	}
+	return edgeTiles;
+}
+
 inline void __attribute__((always_inline)) S9xDrawOffsetBackgroundHardwarePriority0Inline (
     int tileSize, int tileShift, int bitShift, int paletteShift, int paletteMask, int startPalette, bool directColourMode,
 	uint32 BGMode, uint32 bg, bool sub, int depth0, int depth1)
@@ -1034,9 +1049,9 @@ inline void __attribute__((always_inline)) S9xDrawOffsetBackgroundHardwarePriori
 		OffsetMask = 0x1ff;
 		OffsetShift = 3;
     }
-
 	// Optimized version of the offset per tile renderer
 	//
+	int edgeTiles = S9xStereoEdgeTiles();
 	for (uint32 OY = LayerRender.startY[bg]; OY <= GFX.EndY; )
     {
 		// Do a check to find out how many scanlines
@@ -1059,7 +1074,7 @@ inline void __attribute__((always_inline)) S9xDrawOffsetBackgroundHardwarePriori
 		// For those lines, draw the tiles column by column 
 		// (from the left to the right of the screen)
 		//
-			for (int Left = 0; Left <= 256; Left += 8)	// Bug fix: It should be Left <= 256 instead of Left < 256
+			for (int Left = -edgeTiles * 8; Left <= 256 + edgeTiles * 8; Left += 8)	// Bug fix: It should be Left <= 256 instead of Left < 256
 			{
 				for (uint32 Y = OY; Y < OY + (uint32)TotalLines; )
 				{
@@ -1118,7 +1133,7 @@ inline void __attribute__((always_inline)) S9xDrawOffsetBackgroundHardwarePriori
 				uint32 Lines;
 				
 				//int sX = Left;
-				bool8 left_hand_edge = (Left == 0);
+				bool8 left_hand_edge = (Left <= 0);   // margin columns left of the screen too: no offset table entry exists for them
 				//Width = Right - Left;
 				
 				//while (Left < Right) 
@@ -1243,7 +1258,7 @@ inline void __attribute__((always_inline)) S9xDrawOffsetBackgroundHardwarePriori
 					int sX = Left - Offset;
 
 					// Don't display anything beyond the right edge.
-					if (sX >= 256)
+					if (sX >= 256 + edgeTiles * 8)
 						break;
 
 					Tile = READ_2BYTES(t);
@@ -1578,6 +1593,7 @@ inline void __attribute__((always_inline)) S9xDrawBackgroundHardwarePriority0Inl
 		OffsetMask = 0x1ff;
 		OffsetShift = 3;
     }
+	int edgeTiles = S9xStereoEdgeTiles();
 
     for (uint32 Y = LayerRender.startY[bg]; Y <= GFX.EndY; Y += Lines)
     {
@@ -1672,11 +1688,12 @@ inline void __attribute__((always_inline)) S9xDrawBackgroundHardwarePriority0Inl
 			}
 
 			// screen coordinates of the tile.
-			int sX = 0 - (HPos & 7);
+			int sX = 0 - (HPos & 7) - edgeTiles * 8;
 			int sY = Y;
 
 
-			int tilesToDraw = sX == 0 ? 32 : 33;
+			int tilesToDraw = (HPos & 7) == 0 ? 32 : 33;
+			tilesToDraw += edgeTiles * 2;
 
 			// Middle, unclipped tiles
 			//Count = Width - Count;
@@ -1686,6 +1703,15 @@ inline void __attribute__((always_inline)) S9xDrawBackgroundHardwarePriority0Inl
 			//for (int C = Middle; C > 0; s += 8 * GFX.PixSize, Quot++, C--)
 			for (int tno = 0; tno < tilesToDraw; tno++, sX += 8, Quot++)
 			{
+				if (edgeTiles) {
+					int mapWidth = tileSize == 8 ? 64 : 128;
+					Quot = ((int)(HPos >> 3) + tno - edgeTiles) & (mapWidth - 1);
+					if (tileSize == 8) {
+						t = Quot > 31 ? b2 + (Quot & 0x1f) : b1 + Quot;
+					} else {
+						t = Quot > 63 ? b2 + ((Quot >> 1) & 0x1f) : b1 + (Quot >> 1);
+					}
+				}
 				Tile = READ_2BYTES(t);
 
 				int tpriority = (Tile & 0x2000) >> 13;
@@ -1713,24 +1739,16 @@ inline void __attribute__((always_inline)) S9xDrawBackgroundHardwarePriority0Inl
 						tpriority, depth0, depth1,
 						modifiedTile, sX, sY, VirtAlign, Lines, stretchedTy);
 				}
-
-				if (tileSize == 8)
-				{
-					t++;
-					if (Quot == 31)
-						t = b2;
-					else
-						if (Quot == 63)
-							t = b1;
-				}
-				else
-				{
-					t += Quot & 1;
-					if (Quot == 63)
-						t = b2;
-					else
-						if (Quot == 127)
-							t = b1;
+				if (!edgeTiles) {
+					if (tileSize == 8) {
+						t++;
+						if (Quot == 31) t = b2;
+						else if (Quot == 63) t = b1;
+					} else {
+						t += Quot & 1;
+						if (Quot == 63) t = b2;
+						else if (Quot == 127) t = b1;
+					}
 				}
 			}
 
@@ -2009,6 +2027,7 @@ void S9xDrawBackgroundMosaicHardware(
     int MosaicOffset = YStart % S;
     int FirstBlockH = S - MosaicOffset;
 	int hiShift = GPU3DSExt.render2x.enabled ? 1 : 0;
+	int edgeMargin = ((S9xStereoEdgeTiles() * 8 + S - 1) / S) * S;   // whole blocks, so the mosaic grid stays anchored at X = 0
 
     for (int Y = YStart; Y < YEnd; )
     {
@@ -2033,7 +2052,7 @@ void S9xDrawBackgroundMosaicHardware(
         b2 += (ScreenLine & 0x1f) << 5;
 
         int outBlockW = S;
-        for (int X = 0; X < 256; X += outBlockW)
+		for (int X = -edgeMargin; X < 256 + edgeMargin; X += outBlockW)
         {
             // In hires mode we render to 256-wide output while sampling from
             // 512-wide source coordinates.
@@ -2134,7 +2153,7 @@ void S9xDrawBackgroundMosaicHardware(
             int tx = HPos & 7;
             int ty = MosaicLine & 7;
 
-            int blockW = (X + outBlockW > 256) ? (256 - X) : outBlockW;
+			int blockW = (X + outBlockW > 256 + edgeMargin) ? (256 + edgeMargin - X) : outBlockW;
 
             int yDepth = (tpriority == 0 ? depth0 : depth1);
             int x0 = X << hiShift;
@@ -2250,6 +2269,7 @@ inline void __attribute__((always_inline)) S9xDrawHiresBackgroundHardwarePriorit
     {
 		VOffsetShift = 3;
     }
+    int edgeTiles = S9xStereoEdgeTiles() * 2;
 
     int endy = IPPU.Interlace ? 1 + (GFX.EndY << 1) : GFX.EndY;
 	
@@ -2342,7 +2362,7 @@ inline void __attribute__((always_inline)) S9xDrawHiresBackgroundHardwarePriorit
 				
 
 			// screen coordinates of the tile.
-			int sX = 0 - (HPos & 7);
+			int sX = 0 - (HPos & 7) - edgeTiles * 8;
 			int sY = Y;
 			int actualLines = Lines;
 			if (IPPU.Interlace)
@@ -2351,10 +2371,15 @@ inline void __attribute__((always_inline)) S9xDrawHiresBackgroundHardwarePriorit
 				actualLines = (actualLines + 1) >> 1;
 			}
 
-			int tilesToDraw = sX == 0 ? 64 : 66;
+			int tilesToDraw = (HPos & 7) == 0 ? 64 : 66;
+			tilesToDraw += edgeTiles * 2;
 
 			for (int tno = 0; tno < tilesToDraw; tno++, sX += 8, Quot++)
 			{
+				if (edgeTiles) {
+					Quot = ((int)(HPos >> 3) + tno - edgeTiles) & 127;
+					t = Quot > 63 ? b2 + ((Quot >> 1) & 0x1f) : b1 + (Quot >> 1);
+				}
 				Tile = READ_2BYTES(t);
 
 				int tpriority = (Tile & 0x2000) >> 13;
@@ -2381,13 +2406,12 @@ inline void __attribute__((always_inline)) S9xDrawHiresBackgroundHardwarePriorit
 					variantPossible,
 					tpriority, depth0, depth1,
 					modifiedTile, sX, sY, VirtAlign, actualLines, stretchedTy);
+				if (!edgeTiles) {
+					t += Quot & 1;
+					if (Quot == 63) t = b2;
+					else if (Quot == 127) t = b1;
+				}
 				
-				t += Quot & 1;
-				if (Quot == 63)
-					t = b2;
-				else
-					if (Quot == 127)
-						t = b1;
 			}
 		}
     }
@@ -2626,6 +2650,7 @@ SOBJList OBJList[128];
 //-------------------------------------------------------------------
 void S9xDrawOBJSHardware (bool8 sub, int depth = 0, int priority = 0)
 {
+	int edgeMargin = S9xStereoEdgeTiles() * 8;
 	// Note: We draw subscreens first, then the main screen.
 	// So if the subscreen has already been drawn, and we are drawing the main screen,
 	// we simply just redraw the same vertices that we have saved.
@@ -2736,7 +2761,7 @@ void S9xDrawOBJSHardware (bool8 sub, int depth = 0, int priority = 0)
 					{
 						// No clipping at all.
 						//
-						for (; X<=256 && X<PPU.OBJ[S].HPos+objWidth; X += 8)
+						for (; X<=256 + edgeMargin && X<PPU.OBJ[S].HPos+objWidth; X += 8)
 						{
 							S9xDrawOBJTileHardware2 (sub, priorityOffset, BaseTile|TileX, X, Y, TileLine, TileHeight);
 							TileX=(TileX+TileInc) & 0x0f;
@@ -2787,10 +2812,12 @@ void S9xDrawOBJSHardware (bool8 sub, int depth = 0, int priority = 0)
 					BaseTile |= H_FLIP;
 				}
 		
+				// X = -256 counts towards the sprite limits but is never visible: the end stays at
+				// the real HPos so no tile is drawn (the margin would pull it into view)
 				int X = (ppuObj.HPos == -256) ? 256 : ppuObj.HPos;
-				int endX = X + GFX.OBJWidths[S];
+				int endX = ppuObj.HPos + GFX.OBJWidths[S];
 		
-				while (X <= 256 && X < endX)
+				while (X <= 256 + edgeMargin && X < endX)
 				{
 					S9xDrawOBJTileHardware2(sub, 
 						priorityDepthOffset + ppuObj.Priority * 768, 
@@ -3093,6 +3120,9 @@ void S9xDrawBackgroundMode7Hardware(int bg, bool8 sub, int depth, int alphaTestA
 		alphaTest = GFX.r2131 & 0x40 ? ALPHA_TEST_GTE_0_5 : ALPHA_TEST_GTE_1_0;
 	
 	int hiShift = GPU3DSExt.render2x.enabled ? 1 : 0;
+	// stereo 3D: lines reach past the screen edges so shifted lines don't leave empty strips
+	// (the plane is affine along a line, so its texture coordinates extend exactly)
+	int edgeMargin = gpu3dsStereoEdgeTiles() * 8;
 
 	for (int Y = (int)LayerRender.startY[bg]; Y <= (int)GFX.EndY; Y++)
 	{
@@ -3104,8 +3134,8 @@ void S9xDrawBackgroundMode7Hardware(int bg, bool8 sub, int depth, int alphaTestA
 		int CentreX = ((int) p->CentreX << M7) >> M7; 
 		int CentreY = ((int) p->CentreY << M7) >> M7; 
 
-		int Left = 0;
-		int Right = 256;
+		int Left = -edgeMargin;
+		int Right = 256 + edgeMargin;
 		int m7Left = Left;
 		int m7Right = Right;
 
@@ -3156,6 +3186,9 @@ void S9xDrawBackgroundMode7HardwareRepeatTile0(int bg, bool8 sub, int depth)
 {
 	bool verticesUpdated = false;
 	int hiShift = GPU3DSExt.render2x.enabled ? 1 : 0;
+	// stereo 3D: lines reach past the screen edges so shifted lines don't leave empty strips
+	// (the plane is affine along a line, so its texture coordinates extend exactly)
+	int edgeMargin = gpu3dsStereoEdgeTiles() * 8;
 	
 	for (int Y = (int)LayerRender.startY[bg]; Y <= (int)GFX.EndY; Y++)
 	{
@@ -3167,8 +3200,8 @@ void S9xDrawBackgroundMode7HardwareRepeatTile0(int bg, bool8 sub, int depth)
 		int CentreX = ((int) p->CentreX << M7) >> M7; 
 		int CentreY = ((int) p->CentreY << M7) >> M7; 
 		
-		uint32 Left = 0;
-		uint32 Right = 256;
+		int Left = -edgeMargin;
+		int Right = 256 + edgeMargin;
  
 		int yy = Y;
 
