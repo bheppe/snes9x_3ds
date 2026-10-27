@@ -214,6 +214,9 @@ void gpu3dsDrawSnesScreenEye(bool rightEye);
 void gpu3dsEndSnesScreenEyes();
 void gpu3dsStereoGetDepths(int out[5]);   // depths in use right now (Manual: the sliders)
 void gpu3dsStereoGetRecommended(int out[5]);   // depths Recommended mode uses for the current game
+bool gpu3dsStereoTiltActive();   // Mode 7 floor tilt wanted: the Mode 7 builder reports its lines
+void gpu3dsStereoBeginEmulatedFrame();   // before emulating a frame that is going to be shown
+void gpu3dsStereoNoteMode7Line(int y, int a, int c);   // a Mode 7 line and its M7A / M7C
 int gpu3dsStereoEdgeTiles();   // extra 8 pixel tile columns to build past each screen edge for the layer shifts (0 in 2D)
 void gpu3dsCommitLayerSection(SGPU_VBO_ID vboId, LAYER_ID id, SGPURenderState *state, bool sub = false, bool reuseVertices = false);
 

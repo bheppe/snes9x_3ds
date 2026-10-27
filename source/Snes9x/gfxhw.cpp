@@ -3123,6 +3123,7 @@ void S9xDrawBackgroundMode7Hardware(int bg, bool8 sub, int depth, int alphaTestA
 	// stereo 3D: lines reach past the screen edges so shifted lines don't leave empty strips
 	// (the plane is affine along a line, so its texture coordinates extend exactly)
 	int edgeMargin = gpu3dsStereoEdgeTiles() * 8;
+	bool noteLines = gpu3dsStereoTiltActive();   // the floor tilt needs each frame's Mode 7 lines
 
 	for (int Y = (int)LayerRender.startY[bg]; Y <= (int)GFX.EndY; Y++)
 	{
@@ -3133,6 +3134,9 @@ void S9xDrawBackgroundMode7Hardware(int bg, bool8 sub, int depth, int alphaTestA
 	
 		int CentreX = ((int) p->CentreX << M7) >> M7; 
 		int CentreY = ((int) p->CentreY << M7) >> M7; 
+
+		if (noteLines)
+			gpu3dsStereoNoteMode7Line(Y, p->MatrixA, p->MatrixC);
 
 		int Left = -edgeMargin;
 		int Right = 256 + edgeMargin;

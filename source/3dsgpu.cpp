@@ -419,13 +419,30 @@ void gpu3dsSetStereoShift(float shift)
     C3D_FVUnifSet(GPU_VERTEX_SHADER, GPU3DS.shaderULocs[ULOC_STEREO_OFFSET], shift, 0.0f, 0.0f, 0.0f);
 }
 
+static float stereoTilt[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+void gpu3dsSetStereoTilt(const float tilt[4])
+{
+    static const float none[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    if (!tilt)
+        tilt = none;
+
+    if (!memcmp(tilt, stereoTilt, sizeof(stereoTilt)))
+        return;
+
+    memcpy(stereoTilt, tilt, sizeof(stereoTilt));
+    C3D_FVUnifSet(GPU_GEOMETRY_SHADER, GPU3DS.shaderULocs[ULOC_STEREO_TILT], stereoTilt[0], stereoTilt[1], stereoTilt[2], stereoTilt[3]);
+}
+
 void gpu3dsSetShaderAndUniforms(SGPURenderState *state, u64 diff, bool targetUpdated, bool textureUpdated) {
     bool shaderUpdated = diff & PACKED_MASK_SHADER;
 
     if (shaderUpdated) {
         C3D_BindProgram(&GPU3DS.shaders[state->shader].shaderProgram);
-        if (state->shader == SPROGRAM_TILES)
+        if (state->shader == SPROGRAM_TILES) {
             C3D_FVUnifSet(GPU_VERTEX_SHADER, GPU3DS.shaderULocs[ULOC_STEREO_OFFSET], stereoShiftX, 0.0f, 0.0f, 0.0f);
+            C3D_FVUnifSet(GPU_GEOMETRY_SHADER, GPU3DS.shaderULocs[ULOC_STEREO_TILT], stereoTilt[0], stereoTilt[1], stereoTilt[2], stereoTilt[3]);
+        }
         GPU3DS.currentRenderTargetDim = 0;
         GPU3DS.currentTextureDim = 0;
         GPU3DS.currentVboId = VBO_COUNT;
@@ -946,6 +963,7 @@ bool gpu3dsInitializeShaderUniformLocations()
     
     // used by shader_tiles (v): per-layer horizontal shift for per-eye stereo rendering
     GPU3DS.shaderULocs[ULOC_STEREO_OFFSET] = shaderInstanceGetUniformLocation(GPU3DS.shaders[SPROGRAM_TILES].shaderProgram.vertexShader, "stereoOffset");
+    GPU3DS.shaderULocs[ULOC_STEREO_TILT] = shaderInstanceGetUniformLocation(GPU3DS.shaders[SPROGRAM_TILES].shaderProgram.geometryShader, "stereoTilt");
 
     // used by shader_mode7 (v)
     GPU3DS.shaderULocs[ULOC_UPDATE_FRAME] = shaderInstanceGetUniformLocation(GPU3DS.shaders[SPROGRAM_MODE7].shaderProgram.vertexShader, "updateFrame");

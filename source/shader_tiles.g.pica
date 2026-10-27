@@ -1,10 +1,15 @@
 ; Uniforms
 .fvec       projection[4]       ; #0 - 3
 .fvec       textureScale        ; #4
+.fvec       stereoTilt          ; per-eye Mode 7 floor tilt, added to the X of tiles by their screen line y:
+                                ;   x * clamp((y bottom - y) * z, 0, 1)
+                                ; x: this eye's extra shift at full tilt (render-target pixels, 0 = no tilt)
+                                ; y: the floor's bottom line, z: 1 / (bottom line - top line)
 
 ; Constants
 .constf c_base          (0.004032258064516, 1, -1, 0.00395) ; x: 5-bit color conversion
                                                             ; w: if we use 0.00390625, the scanline for mode 7 cannot appear!
+.constf c_tilt          (32, 0, 0, 0)                       ; x: the vertex shader outputs z = d / 32
 ; Outputs
 .out        outpos      position
 .out        outtex      texcoord0
@@ -24,8 +29,29 @@
     mov     r7, c_base
     mov     outpos.w, r7.y              ; required for citra
 
+    ; Mode 7 floor tilt: extra X shift of the top (r11.x) and bottom (r11.y) corners by their
+    ; screen line: none at the floor's bottom line, all of it at its top line and above.
+    ; Tiles only (depth value d > 0): backdrop, colour math, brightness and window rects (d = 0)
+    ; stay put. With no tilt (3D off, no Mode 7 floor) this is skipped and r11 stays 0.
+    mov     r11.xy, c_tilt.yy
+    mov     r13, stereoTilt
+    cmp     c_tilt.yy, eq, eq, r13.xx
+    jmpc    cmp.x, tilt_done
+
+    mul     r8.x, c_tilt.x, v0.z        ; r8.x = d
+    min     r8.y, r8.x, r7.y            ; r8.y = 1 for tiles (d > 0), 0 for rects (d = 0)
+    add     r11.x, r13.y, -v0.y
+    add     r11.y, r13.y, -v3.y
+    mul     r11.xy, r13.zz, r11.xy
+    max     r11.xy, c_tilt.yy, r11.xy
+    min     r11.xy, r7.yy, r11.xy
+    mul     r11.xy, r13.xx, r11.xy
+    mul     r11.xy, r8.yy, r11.xy
+tilt_done:
+
     mov     r10.xyz, v0
     mov     r10.w, r7.y
+    add     r10.x, r11.x, r10.x         ; tilt of the top corners
 
     ; outpos = projection * in.pos
     dp4     r0.x, projection[0], r10
@@ -40,6 +66,7 @@
 	mul 	r2, r7.xxxx, v2
 
     mov     r10.xyz, v3
+    add     r10.x, r11.y, r10.x         ; tilt of the bottom corners
 
     ; outpos = projection * in.pos
     dp4     r3.x, projection[0], r10
@@ -49,6 +76,14 @@
 
     ; outtex = in.texcoord
     mul     r4, textureScale, v4
+
+    ; The corners that mix x1 with y0 (top-right) and x0 with y1 (bottom-left) take their own
+    ; line's tilt: r12.y = x of top-right (also the Mode 7 line's right end, since a Mode 7
+    ; line's v3.y is only the marker), r12.z = x of bottom-left. Equal to r3.x / r0.x without tilt.
+    add     r12.x, r11.x, -r11.y
+    mul     r12.x, projection[0].x, r12.x
+    add     r12.y, r3.x, r12.x
+    add     r12.z, r0.x, -r12.x
 
     cmp     r3.y, lt, lt, r7.z          ; if (r3.y (after projection) < -1) then
     jmpc    cmp.x, mode7
@@ -70,7 +105,8 @@
     emit 
 
     setemit 1                           ; top-right
-    mov     outpos.xz, r3.xz
+    mov     outpos.x, r12.y
+    mov     outpos.z, r3.z
     mov     outpos.y, r0.y
     mov     outtex.x, r4.x
     mov     outtex.y, r1.y
@@ -78,7 +114,8 @@
     emit 
     
     setemit 2, prim                     ; bottom-left
-    mov     outpos.xz, r0.xz
+    mov     outpos.x, r12.z
+    mov     outpos.z, r0.z
     mov     outpos.y, r3.y
     mov     outtex.x, r1.x
     mov     outtex.y, r4.y
@@ -114,7 +151,7 @@ mode7:
     emit 
 
     setemit 1                           ; top-right
-    mov     outpos.x, r3.x
+    mov     outpos.x, r12.y
     mov     outpos.y, r0.y              ; mov outpos.yz, r0.yz won't work
     mov     outpos.z, r0.z
     mov     outtex.xy, r4.xy
@@ -129,7 +166,7 @@ mode7:
     emit 
 
     setemit 0, prim inv                 ; bottom-right
-    mov     outpos.x, r3.x
+    mov     outpos.x, r12.y
     mov     outpos.y, r3.y
     mov     outpos.z, r0.z
     mov     outtex.xy, r4.xy

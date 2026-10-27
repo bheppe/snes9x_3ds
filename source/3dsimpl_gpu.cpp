@@ -576,6 +576,73 @@ static float stereoLayerShift(LAYER_ID id, bool rightEye)
     return (float)(stereoDepthShift(depths[id], rightEye) * (GPU3DSExt.renderWidth / 256));
 }
 
+// Mode 7 lines of the frame emulated last (the one drawn next): the first and last line and the
+// smallest / largest squared horizontal scale (M7A^2 + M7C^2; lines where it is 0 are left out).
+static struct {
+    int   top, bottom;
+    float minScale2, maxScale2;
+} stereoMode7 = { 1000, -1, 0.0f, 0.0f };
+static bool stereoMode7PrevFrame;   // the frame emulated before that had Mode 7 lines
+
+// Whether the Mode 7 builder should report its lines (Per-Layer 3D on, slider up, tilt above 0).
+bool gpu3dsStereoTiltActive()
+{
+    return settings3DS.Stereo3DLayers && settings3DS.StereoMode7Tilt > 0 && gpu3dsGetIOD() > 0.0f;
+}
+
+// Called before emulating a frame that is going to be shown (skipped frames keep the last stats).
+void gpu3dsStereoBeginEmulatedFrame()
+{
+    stereoMode7PrevFrame = stereoMode7.bottom >= 0;
+    stereoMode7.top = 1000;
+    stereoMode7.bottom = -1;
+    stereoMode7.minScale2 = 0.0f;
+    stereoMode7.maxScale2 = 0.0f;
+}
+
+void gpu3dsStereoNoteMode7Line(int y, int a, int c)
+{
+    if (y < stereoMode7.top) stereoMode7.top = y;
+    if (y > stereoMode7.bottom) stereoMode7.bottom = y;
+
+    float scale2 = (float)a * a + (float)c * c;
+    if (scale2 > 0.0f) {
+        if (stereoMode7.minScale2 == 0.0f || scale2 < stereoMode7.minScale2) stereoMode7.minScale2 = scale2;
+        if (scale2 > stereoMode7.maxScale2) stereoMode7.maxScale2 = scale2;
+    }
+}
+
+// Floor tilt for one eye of the frame being drawn (the stereoTilt uniform of shader_tiles.g.pica).
+// A perspective floor's disparity falls linearly from its far (top) line to its near (bottom) line,
+// so tiles get an extra shift of `tilt` depth steps back at the floor's top line and above, fading to
+// none at its bottom line. The strength follows how much the Mode 7 scale changes down the floor:
+// none for flat Mode 7 (one scale on every line: rotating maps, bosses), all of it once the far line's
+// scale is twice the near line's, and in between it fades, so a game zooming into a floor view
+// doesn't jump. Returns false (no tilt) when there is no such floor.
+static bool stereoTiltParams(bool rightEye, float out[4])
+{
+    if (!gpu3dsStereoTiltActive() || stereoMode7.bottom < 0 || stereoMode7.minScale2 <= 0.0f)
+        return false;
+
+    float strength = sqrtf(stereoMode7.maxScale2 / stereoMode7.minScale2) - 1.0f;
+    if (strength <= 0.0f)
+        return false;
+    if (strength > 1.0f)
+        strength = 1.0f;
+
+    // total separation at full tilt, in render-target pixels (negative = further away), split
+    // between the eyes like the layer depths
+    float separation = -strength * settings3DS.StereoMode7Tilt * osGet3DSliderState() * (gpu3dsGetIODBase() / 3.0f)
+                     * (GPU3DSExt.renderWidth / 256);
+    int span = stereoMode7.bottom > stereoMode7.top ? stereoMode7.bottom - stereoMode7.top : 1;
+
+    out[0] = (rightEye ? -0.5f : 0.5f) * separation;
+    out[1] = (float)stereoMode7.bottom;
+    out[2] = 1.0f / span;
+    out[3] = 0.0f;
+    return true;
+}
+
 // Extra 8 pixel tile columns the layer builders add past each screen edge. A shifted layer would
 // otherwise leave an empty strip as wide as its shift at one edge; with the extra columns the tiles
 // that move in come from the real tilemap. Sized for the widest shift of any layer in either eye
@@ -594,12 +661,19 @@ int gpu3dsStereoEdgeTiles()
                         : stereoAuto.current[id];
         int other = settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL ? depth : stereoAuto.target[id];
 
+        // with a Mode 7 floor about, every layer may also be moved back by up to the floor tilt
+        int tilt = gpu3dsStereoTiltActive() && (stereoMode7PrevFrame || PPU.BGMode == 7) ? settings3DS.StereoMode7Tilt : 0;
+
         for (int eye = 0; eye < 2; eye++) {
             int a = abs(stereoDepthShift(depth, eye != 0));
             int b = abs(stereoDepthShift(other, eye != 0));
+            int c = abs(stereoDepthShift(depth - tilt, eye != 0));
+            int d = abs(stereoDepthShift(other - tilt, eye != 0));
 
             if (a > widest) widest = a;
             if (b > widest) widest = b;
+            if (c > widest) widest = c;
+            if (d > widest) widest = d;
         }
     }
 
@@ -868,11 +942,15 @@ void gpu3dsDrawSnesScreenEye(bool rightEye) {
     gpu3dsSetDefaultRenderState(SPROGRAM_TILES, false);
     GPU3DS.currentRenderState.alphaBlending = ALPHA_BLENDING_DISABLED;
 
+    float tilt[4];
+    gpu3dsSetStereoTilt(stereoTiltParams(rightEye, tilt) ? tilt : NULL);
+
     stereoEye = rightEye ? 1 : -1;
     gpu3dsDrawMode7Texture();   // no-op after the first eye (it clears its own dirty flags)
     gpu3dsDrawLayers(&GPU3DSExt.layerList);
     stereoEye = 0;
     stereoSetLayerShift(0.0f);
+    gpu3dsSetStereoTilt(NULL);
 }
 
 void gpu3dsEndSnesScreenEyes() {

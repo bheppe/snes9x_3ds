@@ -44,6 +44,14 @@ Example Manual depths for ActRaiser action stages: BG1 -1, BG2 -4, BG3 +3, BG4 -
 
 Game configs saved by the first release (v1.61-layers1) keep working: they load as Manual with their own depths.
 
+## Mode 7 Floor Tilt
+Settings tab, **3D Layer Depth (this game)**, in every Depth Mode: **Mode 7 Floor Tilt** (0 to 8, default 6, saved per
+game). When a game draws a perspective Mode 7 floor (F-Zero, Super Mario Kart, Pilotwings), the floor recedes: its
+bottom line stays at BG1's depth and its far end goes back by the tilt, and everything above the floor (sky, horizon)
+goes back by the whole tilt, so the sky stays behind the far end of the floor. Sprites and BGs on those lines move with
+the floor, so a car stays on the road. Flat Mode 7 (rotating maps, bosses: the same scale on every line) gets no tilt,
+and it fades in between, so a game zooming into a floor view does not jump. 0 turns it off.
+
 ## Game notes
 Depths and notes for the built-in list come from SWChris, who tested them on a New 3DS XL.
 - **Super Mario All-Stars**: the Recommended depths (BG1 0, BG2 -4, BG3 -8, BG4 0, Sprites 0) suit Super Mario Bros 1, 2
@@ -71,7 +79,9 @@ Open **Emulator** tab, **ROM Info**, note the CRC32. Add a line to `stereoGameTa
 ## Known limitations
 - Auto is a guess from scroll speed: layers that drift on their own, or games with unusual
   layer use, can look wrong. Switch to Manual for those.
-- Mode 7 scenes get no receding depth (BG1's shift at most). Super Mario Kart and F-Zero stay mostly flat.
+- Mode 7 floor tilt uses one ramp per frame, from the first to the last Mode 7 line. Split-screen Mode 7 (Super Mario
+  Kart two player, or a course above a map) gets one ramp over both views, so the upper view sits further back.
+- Everything above a Mode 7 floor gets the full tilt, including a HUD drawn there.
 - All sprites share one depth. Window/clip masks are not shifted; no per-priority depth within a layer.
 - Shifted layers would leave an empty strip at the screen edges, so the layers are built a few tile columns wider
   than the screen and nothing is cropped.

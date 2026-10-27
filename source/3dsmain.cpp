@@ -988,6 +988,9 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
                     }
                 });
 
+            AddMenuGauge(items, "  Mode 7 Floor Tilt"_s, 0, 8, settings3DS.StereoMode7Tilt,
+                []( int val ) { if (CheckAndUpdate(settings3DS.StereoMode7Tilt, val)) menu3dsSetScreenDirty(); }, true);
+
             if (settings3DS.StereoDepthMode == STEREO_DEPTH_MANUAL) {
                 AddMenuCheckbox(items, "  Show Only Selected Layer"_s, settings3DS.StereoIsolateLayer,
                     []( int val ) {
@@ -1528,6 +1531,10 @@ bool settingsReadWriteFullListByGame(bool writeMode)
     } else if (!writeMode && detectedConfigVersion >= 1.6f) {
         // game configs saved before the depth modes existed keep using their own depth sliders
         settings3DS.StereoDepthMode = STEREO_DEPTH_MANUAL;
+    }
+
+    if (writeMode || detectedConfigVersion >= 1.8f) {
+        config3dsReadWriteInt32(stream, writeMode, "StereoMode7Tilt=%d\n", &settings3DS.StereoMode7Tilt, 0, 8);
     }
 
     // skip reading new hotkey schema from older cfg files and map legacy key names in-place

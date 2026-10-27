@@ -982,6 +982,10 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 
 	gpu3dsPrepareSnesScreenForNextFrame();
 
+	// per-layer 3D: the Mode 7 floor tilt measures each drawn frame's Mode 7 lines
+	if (!skipDrawingFrame)
+		gpu3dsStereoBeginEmulatedFrame();
+
 	t3dsStartTimer(TIMER_S9X_MAIN_LOOP);
 	if (!Settings.SA1)
 		S9xMainLoop();

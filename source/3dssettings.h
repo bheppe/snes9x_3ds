@@ -185,6 +185,7 @@ typedef struct {
     int                 CropBottom;             // bottom crop value in scanlines
     bool                Overscan;               // zoom (cropped) ingame screen to fit height
     bool                Stereo3DLayers;         // per-game: draw each BG/OBJ layer per eye with its own depth
+    int                 StereoMode7Tilt;        // per-game: how far a Mode 7 floor's far end goes back, 0..8 (0 = flat)
     int                 StereoLayerDepth[5];    // BG1..BG4, OBJ: disparity in SNES pixels at full slider, -8..8
                                                 // (positive = out of the screen, negative = behind it, 0 = screen plane)
     int                 StereoDepthMode;        // per-game: how the layer depths are chosen (STEREO_DEPTH_*)
