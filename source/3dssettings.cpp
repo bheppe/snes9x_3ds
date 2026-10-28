@@ -109,6 +109,7 @@ void settings3dsResetGameDefaults() {
     settings3DS.StereoLayerDepth[2] = 3;    // BG3
     settings3DS.StereoLayerDepth[3] = -2;   // BG4
     settings3DS.StereoLayerDepth[4] = 0;    // OBJ
+    settings3DS.StereoMode7Tilt = 6;
     settings3DS.StereoDepthMode = STEREO_DEPTH_RECOMMENDED;
     settings3DS.Volume = settings3DS.GlobalVolume;
     settings3DS.MaxFrameSkips = 1;
