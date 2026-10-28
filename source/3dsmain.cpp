@@ -801,7 +801,7 @@ const std::vector<SMenuItem>& makeOptionsForButtonMapping() {
 
 std::vector<SMenuItem> makeOptionsFor3DSButtonMapping() {
     std::vector<SMenuItem> items;
-    items.reserve(17);
+    items.reserve(32);
 
     AddMenuDialogOption(items, 0,                                   "-"_s);
     
@@ -830,6 +830,24 @@ std::vector<SMenuItem> makeOptionsFor3DSButtonMapping() {
     AddMenuDialogOption(items, static_cast<int>(KEY_Y),             "3DS Y Button"_s);
     AddMenuDialogOption(items, static_cast<int>(KEY_L),             "3DS L Button"_s);
     AddMenuDialogOption(items, static_cast<int>(KEY_R),             "3DS R Button"_s);
+
+    // combos: all buttons held, the last one pressed fires the hotkey; the
+    // game doesn't see the combo's buttons until they are released
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_L),     "SELECT + L"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_R),     "SELECT + R"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_A),     "SELECT + A"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_B),     "SELECT + B"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_X),     "SELECT + X"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_Y),     "SELECT + Y"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_DUP),   "SELECT + D-Pad Up"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_DDOWN), "SELECT + D-Pad Down"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_DLEFT), "SELECT + D-Pad Left"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_SELECT | KEY_DRIGHT),"SELECT + D-Pad Right"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_START | KEY_L),      "START + L"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_START | KEY_R),      "START + R"_s);
+    AddMenuDialogOption(items, static_cast<int>(KEY_L | KEY_R),          "L + R"_s);
+    if (settings3DS.isNew3DS)
+        AddMenuDialogOption(items, static_cast<int>(KEY_ZL | KEY_ZR),    "ZL + ZR"_s);
 
     return items;
 }
@@ -1263,6 +1281,8 @@ void makeControlsMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menu
                     }
                 });
 
+    items.emplace_back(nullptr, MenuItemType::Textarea, "  Combos (e.g. SELECT + L): hold the first button, then"_s, ""_s);
+    items.emplace_back(nullptr, MenuItemType::Textarea, "  press the second. The game doesn't see them while held."_s, ""_s);
     AddMenuDisabledOption(items, ""_s);
 
     for (int displayIdx = 0; displayIdx < HOTKEYS_COUNT; ++displayIdx) {

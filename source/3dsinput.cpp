@@ -14,11 +14,57 @@ static u32 currKeysHeld = 0;
 static u32 lastKeysHeld = 0;
 static bool ignoreInput = false;
 static bool turboModeToggle = false;
+// buttons of a combo hotkey (e.g. Select + L) that fired: hidden from the
+// game until they are released, so the combo doesn't also press them in-game
+static u32 comboKeysHidden = 0;
+
+static u32 hotkeyMask(int hotkey)
+{
+    return settings3DS.UseGlobalEmuControlKeys ? settings3DS.GlobalButtonHotkeys[hotkey].MappingBitmasks[0]
+                                               : settings3DS.ButtonHotkeys[hotkey].MappingBitmasks[0];
+}
+
+static bool isCombo(u32 mask)
+{
+    return (mask & (mask - 1)) != 0;   // more than one button
+}
+
+// a combo hotkey that is fully held and uses one of these buttons: a single-
+// button hotkey on L then doesn't also fire when SELECT + L is pressed
+static bool comboHeldWith(u32 buttons, u32 held)
+{
+    for (int i = 0; i < HOTKEYS_COUNT; ++i) {
+        u32 m = hotkeyMask(i);
+        if (isCombo(m) && (m & buttons) && (held & m) == m)
+            return true;
+    }
+    return false;
+}
+
+// all of the hotkey's buttons are held and one of them was just pressed, so a
+// combo fires on whichever button is pressed last (Select then L, or L then Select)
+static bool hotkeyPressed(int hotkey, u32 held, u32 down)
+{
+    u32 mask = hotkeyMask(hotkey);
+    if (mask == 0 || (held & mask) != mask || !(down & mask))
+        return false;
+    if (isCombo(mask))
+        comboKeysHidden |= mask;
+    else if (comboHeldWith(mask, held))
+        return false;
+    return true;
+}
 
 static bool input3dsIsFastForwardHoldPressed()
 {
-    return (!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_FAST_FORWARD_HOLD].IsHeld(currKeysHeld)) ||
-           (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_FAST_FORWARD_HOLD].IsHeld(currKeysHeld));
+    u32 mask = hotkeyMask(HOTKEY_FAST_FORWARD_HOLD);
+    if (mask == 0 || (currKeysHeld & mask) != mask)
+        return false;
+    if (isCombo(mask))
+        comboKeysHidden |= mask;
+    else if (comboHeldWith(mask, currKeysHeld))
+        return false;
+    return true;
 }
 
 static void input3dsSetTurboMode(bool turboModeActive, bool showNotification)
@@ -77,11 +123,9 @@ u32 input3dsScanInputForEmulation()
     
     u32 keysDown = (~lastKeysHeld) & currKeysHeld;
     bool isInGame = GPU3DS.emulatorState == EMUSTATE_EMULATE;
+    comboKeysHidden &= currKeysHeld;   // released buttons go back to the game
 
-    if (keysDown & KEY_TOUCH || 
-        (!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_OPEN_MENU].IsHeld(keysDown)) ||
-        (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_OPEN_MENU].IsHeld(keysDown))
-        )
+    if (keysDown & KEY_TOUCH || hotkeyPressed(HOTKEY_OPEN_MENU, currKeysHeld, keysDown))
     {
         if (isInGame)
         {
@@ -105,34 +149,26 @@ u32 input3dsScanInputForEmulation()
         }
         #endif
 
-        if ((!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_SWAP_CONTROLLERS].IsHeld(keysDown)) ||
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_SWAP_CONTROLLERS].IsHeld(keysDown)))
+        if (hotkeyPressed(HOTKEY_SWAP_CONTROLLERS, currKeysHeld, keysDown))
             impl3dsSwapJoypads();
             
-        if ((!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_QUICK_SAVE].IsHeld(keysDown)) || 
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_QUICK_SAVE].IsHeld(keysDown)))
+        if (hotkeyPressed(HOTKEY_QUICK_SAVE, currKeysHeld, keysDown))
             impl3dsQuickSaveLoad(true);
 
-        if ((!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_QUICK_LOAD].IsHeld(keysDown)) || 
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_QUICK_LOAD].IsHeld(keysDown)))
+        if (hotkeyPressed(HOTKEY_QUICK_LOAD, currKeysHeld, keysDown))
             impl3dsQuickSaveLoad(false);
         
-        if ((!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_SAVE_SLOT_NEXT].IsHeld(keysDown)) || 
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_SAVE_SLOT_NEXT].IsHeld(keysDown)))
+        if (hotkeyPressed(HOTKEY_SAVE_SLOT_NEXT, currKeysHeld, keysDown))
             impl3dsSelectSaveSlot(1);
 
-        if ((!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_SAVE_SLOT_PREV].IsHeld(keysDown)) || 
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_SAVE_SLOT_PREV].IsHeld(keysDown)))
+        if (hotkeyPressed(HOTKEY_SAVE_SLOT_PREV, currKeysHeld, keysDown))
             impl3dsSelectSaveSlot(-1);
             
-        if ((!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_SCREENSHOT].IsHeld(keysDown)) || 
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_SCREENSHOT].IsHeld(keysDown))) {
+        if (hotkeyPressed(HOTKEY_SCREENSHOT, currKeysHeld, keysDown)) {
             impl3dsPrepareScreenshot();
         }
 
-        bool fastForwardTogglePressed =
-            (!settings3DS.UseGlobalEmuControlKeys && settings3DS.ButtonHotkeys[HOTKEY_FAST_FORWARD_TOGGLE].IsHeld(keysDown)) ||
-            (settings3DS.UseGlobalEmuControlKeys && settings3DS.GlobalButtonHotkeys[HOTKEY_FAST_FORWARD_TOGGLE].IsHeld(keysDown));
+        bool fastForwardTogglePressed = hotkeyPressed(HOTKEY_FAST_FORWARD_TOGGLE, currKeysHeld, keysDown);
 
         if (fastForwardTogglePressed) {
             turboModeToggle = !turboModeToggle;
@@ -156,5 +192,5 @@ void input3dsWaitForRelease()
 //---------------------------------------------------------
 u32 input3dsGetCurrentKeysHeld()
 {
-    return currKeysHeld;
+    return currKeysHeld & ~comboKeysHidden;
 }
