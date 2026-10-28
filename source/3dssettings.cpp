@@ -111,6 +111,10 @@ void settings3dsResetGameDefaults() {
     settings3DS.StereoLayerDepth[4] = 0;    // OBJ
     settings3DS.StereoMode7Tilt = 6;
     settings3DS.StereoDepthMode = STEREO_DEPTH_RECOMMENDED;
+    settings3DS.StereoProfile = 0;
+    settings3DS.StereoAltDepthMode = settings3DS.StereoDepthMode;
+    for (int i = 0; i < 5; i++)
+        settings3DS.StereoAltLayerDepth[i] = settings3DS.StereoLayerDepth[i];
     settings3DS.Volume = settings3DS.GlobalVolume;
     settings3DS.MaxFrameSkips = 1;
     settings3DS.CurrentSaveSlot = 1;
@@ -136,6 +140,21 @@ void settings3dsResetGameDefaults() {
     for (int i = 0; i < HOTKEYS_COUNT; ++i) {
         settings3DS.ButtonHotkeys[i] = settings3DS.GlobalButtonHotkeys[i];
     }
+}
+
+// Two depth profiles per game (e.g. overworld and battle): the active one lives in
+// StereoDepthMode / StereoLayerDepth, which everything else reads, and the other one
+// is kept aside. Switching swaps them.
+void settings3dsSwapDepthProfile() {
+    int mode = settings3DS.StereoDepthMode;
+    settings3DS.StereoDepthMode = settings3DS.StereoAltDepthMode;
+    settings3DS.StereoAltDepthMode = mode;
+    for (int i = 0; i < 5; i++) {
+        int d = settings3DS.StereoLayerDepth[i];
+        settings3DS.StereoLayerDepth[i] = settings3DS.StereoAltLayerDepth[i];
+        settings3DS.StereoAltLayerDepth[i] = d;
+    }
+    settings3DS.StereoProfile ^= 1;
 }
 
 void settings3dsApplyScreenStretch() {

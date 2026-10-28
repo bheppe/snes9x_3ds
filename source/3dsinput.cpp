@@ -168,6 +168,20 @@ u32 input3dsScanInputForEmulation()
             impl3dsPrepareScreenshot();
         }
 
+        if (hotkeyPressed(HOTKEY_SWAP_DEPTH_PROFILE, currKeysHeld, keysDown)) {
+            settings3dsSwapDepthProfile();
+            GPU3DS.gameScreenBufferDesync = true;
+            notif3dsTrigger(Notif::Misc, Notif::Type::Info, 1000,
+                settings3DS.StereoProfile ? "Depth profile B" : "Depth profile A");
+        }
+
+        if (hotkeyPressed(HOTKEY_TOGGLE_3D_LAYERS, currKeysHeld, keysDown)) {
+            settings3DS.Stereo3DLayers = !settings3DS.Stereo3DLayers;
+            GPU3DS.gameScreenBufferDesync = true;
+            notif3dsTrigger(Notif::Misc, Notif::Type::Info, 1000,
+                settings3DS.Stereo3DLayers ? "Per-layer 3D on" : "Per-layer 3D off");
+        }
+
         bool fastForwardTogglePressed = hotkeyPressed(HOTKEY_FAST_FORWARD_TOGGLE, currKeysHeld, keysDown);
 
         if (fastForwardTogglePressed) {

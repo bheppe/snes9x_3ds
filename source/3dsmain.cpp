@@ -97,7 +97,9 @@ static const int hotkeyDisplayOrder[HOTKEYS_COUNT] = {
     HOTKEY_QUICK_SAVE,
     HOTKEY_QUICK_LOAD,
     HOTKEY_SAVE_SLOT_NEXT,
-    HOTKEY_SAVE_SLOT_PREV
+    HOTKEY_SAVE_SLOT_PREV,
+    HOTKEY_SWAP_DEPTH_PROFILE,
+    HOTKEY_TOGGLE_3D_LAYERS
 };
 
 extern SCheatData Cheat;
@@ -985,6 +987,21 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
             });
 
         if (settings3DS.Stereo3DLayers) {
+            AddMenuPicker(items, "  Depth Profile"_s,
+                "Two sets of depths for this game, each with its own\n"
+                "Depth Mode, e.g. one for the overworld and one for\n"
+                "battles. Switch in game with the Swap Depth Profile\n"
+                "hotkey (Controls tab)."_s,
+                makePickerOptions({"A", "B"}), settings3DS.StereoProfile, DIALOG_TYPE_INFO, true,
+                []( int val ) {
+                    if (val != settings3DS.StereoProfile) {
+                        settings3dsSwapDepthProfile();
+                        GPU3DS.gameScreenBufferDesync = true;
+                        menu3dsSetScreenDirty();
+                        menu3dsMarkTabDirty(TAB_SETTINGS);
+                    }
+                });
+
             AddMenuPicker(items, "  Depth Mode"_s,
                 "Auto: works out the depths while you play and uses the\n"
                 "Recommended depths where nothing scrolls (menus, name entry).\n"
@@ -1557,10 +1574,29 @@ bool settingsReadWriteFullListByGame(bool writeMode)
         config3dsReadWriteInt32(stream, writeMode, "StereoMode7Tilt=%d\n", &settings3DS.StereoMode7Tilt, 0, 8);
     }
 
+    if (writeMode || detectedConfigVersion >= 1.9f) {
+        config3dsReadWriteInt32(stream, writeMode, "StereoProfile=%d\n", &settings3DS.StereoProfile, 0, 1);
+        config3dsReadWriteInt32(stream, writeMode, "StereoAltDepthMode=%d\n", &settings3DS.StereoAltDepthMode, STEREO_DEPTH_MANUAL, STEREO_DEPTH_AUTO);
+        for (int i = 0; i < 5; ++i) {
+            snprintf(keyBuf, sizeof(keyBuf), "StereoAltLayerDepth%d=%%d\n", i);
+            config3dsReadWriteInt32(stream, writeMode, keyBuf, &settings3DS.StereoAltLayerDepth[i], -8, 8);
+        }
+    } else {
+        // older configs had one profile: B starts as a copy of it
+        settings3DS.StereoProfile = 0;
+        settings3DS.StereoAltDepthMode = settings3DS.StereoDepthMode;
+        for (int i = 0; i < 5; ++i)
+            settings3DS.StereoAltLayerDepth[i] = settings3DS.StereoLayerDepth[i];
+    }
+
     // skip reading new hotkey schema from older cfg files and map legacy key names in-place
     bool usesLegacyHotkeys = !writeMode && detectedConfigVersion < 1.3f;
     for (int i = 0; i < HOTKEYS_COUNT; ++i) {
         if (!strlen(hotkeysData[i][0])) {
+            continue;
+        }
+        // hotkeys added in 1.9 aren't in older files (keys are read in order)
+        if (i >= HOTKEY_SWAP_DEPTH_PROFILE && !writeMode && detectedConfigVersion < 1.9f) {
             continue;
         }
 
@@ -1685,6 +1721,10 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
     bool usesLegacyGlobalHotkeys = !writeMode && detectedConfigVersion < 1.5f;
     for (int i = 0; i < HOTKEYS_COUNT; ++i) {
         if (!strlen(hotkeysData[i][0])) {
+            continue;
+        }
+        // hotkeys added in 1.8 aren't in older files (keys are read in order)
+        if (i >= HOTKEY_SWAP_DEPTH_PROFILE && !writeMode && detectedConfigVersion < 1.8f) {
             continue;
         }
 

@@ -1689,6 +1689,16 @@ void menu3dsSetHotkeysData(const char* hotkeysData[HOTKEYS_COUNT][3]) {
                 hotkeysData[i][1]= "  Fast-Forward (Hold)";
                 hotkeysData[i][2]= "Fast-forward while this hotkey is held down.\nMay corrupt/freeze games on Old 3DS.";
                 break;
+            case HOTKEY_SWAP_DEPTH_PROFILE:
+                hotkeysData[i][0]= "SwapDepthProfile";
+                hotkeysData[i][1]= "  Swap Depth Profile";
+                hotkeysData[i][2]= "Switches between this game's depth profiles A and B\n(Settings > 3D Layer Depth), e.g. overworld and battle.";
+                break;
+            case HOTKEY_TOGGLE_3D_LAYERS:
+                hotkeysData[i][0]= "Toggle3DLayers";
+                hotkeysData[i][1]= "  Per-Layer 3D On/Off";
+                hotkeysData[i][2]= "Turns per-layer 3D on and off, to compare it with\nthe flat 3D picture while you tune the depths.";
+                break;
             default: 
                 hotkeysData[i][0]= ""; 
                 hotkeysData[i][1]= "  <empty>"; 

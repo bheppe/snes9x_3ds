@@ -38,7 +38,9 @@
 #define HOTKEY_SAVE_SLOT_NEXT       6
 #define HOTKEY_SAVE_SLOT_PREV       7
 #define HOTKEY_FAST_FORWARD_HOLD    8
-#define HOTKEYS_COUNT   9
+#define HOTKEY_SWAP_DEPTH_PROFILE   9
+#define HOTKEY_TOGGLE_3D_LAYERS     10
+#define HOTKEYS_COUNT   11
 
 #define OPACITY_STEPS               20
 #define SCANLINE_INTENSITY_MAX      8   // 47% brightness
@@ -189,6 +191,9 @@ typedef struct {
     int                 StereoLayerDepth[5];    // BG1..BG4, OBJ: disparity in SNES pixels at full slider, -8..8
                                                 // (positive = out of the screen, negative = behind it, 0 = screen plane)
     int                 StereoDepthMode;        // per-game: how the layer depths are chosen (STEREO_DEPTH_*)
+    int                 StereoProfile;          // per-game: which depth profile is in use, 0 = A, 1 = B
+    int                 StereoAltDepthMode;     // the other profile's Depth Mode and depths (swapped in
+    int                 StereoAltLayerDepth[5]; // by settings3dsSwapDepthProfile)
 
     // --- GAME-SPECIFIC ---
     int                 MaxFrameSkips;          // 0 - disable,
@@ -297,6 +302,7 @@ void settings3dsUpdate(bool includeGameSettings);
 bool settingsSave(bool includeGameSettings);
 void settings3dsApplyScreenLayout();
 void settings3dsApplyScreenStretch();
+void settings3dsSwapDepthProfile();
 
 const char *settings3dsGetAppVersion(const char *prefix, const char *suffix = NULL);
 
