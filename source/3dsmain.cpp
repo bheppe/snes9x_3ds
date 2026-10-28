@@ -16,6 +16,7 @@
 #include "memmap.h"
 
 #include "3dsutils.h"
+#include "3dsguide.h"
 #include "3dssettings.h"
 #include "3dslog.h"
 #include "3dsra.h"
@@ -99,7 +100,8 @@ static const int hotkeyDisplayOrder[HOTKEYS_COUNT] = {
     HOTKEY_SAVE_SLOT_NEXT,
     HOTKEY_SAVE_SLOT_PREV,
     HOTKEY_SWAP_DEPTH_PROFILE,
-    HOTKEY_TOGGLE_3D_LAYERS
+    HOTKEY_TOGGLE_3D_LAYERS,
+    HOTKEY_TOGGLE_GUIDE
 };
 
 extern SCheatData Cheat;
@@ -459,6 +461,16 @@ void makeEmulatorMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menu
             menu3dsHideDialog(dialogTab, isDialog, currentMenuTab, menuTabs);
 
         }, MenuItemType::Action, "  Take Screenshot"_s, ""_s);
+
+        if (guide3dsUsable()) {
+            AddMenuCheckbox(items, "  Show Guide on Bottom Screen"_s, guide3dsShown(),
+                []( int val ) { guide3dsSetShown(val != 0); });
+            items.emplace_back(nullptr, MenuItemType::Textarea, "  Drag to scroll, tap Menu (top right) for this menu."_s, ""_s);
+        } else if (guide3dsAvailable()) {
+            AddMenuDisabledOption(items, "  Guide: needs the game on the top screen"_s);
+        } else if (guide3dsError()) {
+            AddMenuDisabledOption(items, std::string("  Guide: ") + guide3dsError());
+        }
 
         AddMenuHeader2(items, ""_s);
 
@@ -1821,6 +1833,8 @@ bool emulatorLoadRom()
         return false;
     }
 
+    guide3dsOpenForRom(romFileNameFullPath);
+
     log3dsWrite("ROM loaded: %s [%s] CRC=%08X %s %s %s %s %s",
                 Memory.ROMName, Memory.ROMId, Memory.ROMCRC32,
                 Memory.MapType(), Memory.Size(),
@@ -2637,6 +2651,18 @@ void updateProfilingOutput(int totalFrames)
 //   (which must be implemented for any new core)
 // for the execution of the frame.
 //----------------------------------------------------------
+// the normal in-game bottom screen, drawn into both of its buffers
+static void drawSecondScreenBackground()
+{
+    gfxSetDoubleBuffering(settings3DS.SecondScreen, true);
+    for (int pass = 0; pass < 2; pass++) {
+        gpu3dsFrameBegin(C3D_FRAME_SYNCDRAW, false, true);
+            gpu3dsClearScreen(settings3DS.SecondScreen);
+            img3dsDrawBackground(UI_BG_SECOND);
+        gpu3dsFrameEnd();
+    }
+}
+
 void emulatorLoop()
 {
     // menu is currently rendered via software and may have configured the screen for
@@ -2660,13 +2686,11 @@ void emulatorLoop()
         gpu3dsFrameEnd();
     }
 
-    if (GPU3DS.profilingMode == PROFILING_OFF) {
-        for (int pass = 0; pass < 2; pass++) {
-            gpu3dsFrameBegin(C3D_FRAME_SYNCDRAW, false, true);
-                gpu3dsClearScreen(settings3DS.SecondScreen);
-                img3dsDrawBackground(UI_BG_SECOND);
-            gpu3dsFrameEnd();
-        }
+    guide3dsScreenChanged();   // drawn below either way
+    if (GPU3DS.profilingMode == PROFILING_OFF && guide3dsShown()) {
+        guide3dsBeginShowing();
+    } else if (GPU3DS.profilingMode == PROFILING_OFF) {
+        drawSecondScreenBackground();
     } else {
         // consoleInit(...) sets double buffering to false
         // make sure to enable double buffering again when leaving emulatorLoop()
@@ -2709,6 +2733,14 @@ void emulatorLoop()
         }
 
         updateProfilingOutput(++totalFrames);
+
+        // the guide was turned on or off in game (hotkey)
+        if (guide3dsScreenChanged() && GPU3DS.profilingMode == PROFILING_OFF) {
+            if (guide3dsShown())
+                guide3dsBeginShowing();
+            else
+                drawSecondScreenBackground();
+        }
 
         t3dsStartTimer(TIMER_RUN_ONE_FRAME);
         impl3dsRunOneFrame(firstFrame, skipDrawing);

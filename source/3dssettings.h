@@ -40,7 +40,8 @@
 #define HOTKEY_FAST_FORWARD_HOLD    8
 #define HOTKEY_SWAP_DEPTH_PROFILE   9
 #define HOTKEY_TOGGLE_3D_LAYERS     10
-#define HOTKEYS_COUNT   11
+#define HOTKEY_TOGGLE_GUIDE         11
+#define HOTKEYS_COUNT   12
 
 #define OPACITY_STEPS               20
 #define SCANLINE_INTENSITY_MAX      8   // 47% brightness

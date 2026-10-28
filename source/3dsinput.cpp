@@ -9,6 +9,7 @@
 #include "3dsutils.h"
 #include "memmap.h"
 #include "3dssound.h"
+#include "3dsguide.h"
 
 static u32 currKeysHeld = 0;
 static u32 lastKeysHeld = 0;
@@ -125,7 +126,12 @@ u32 input3dsScanInputForEmulation()
     bool isInGame = GPU3DS.emulatorState == EMUSTATE_EMULATE;
     comboKeysHidden &= currKeysHeld;   // released buttons go back to the game
 
-    if (keysDown & KEY_TOUCH || hotkeyPressed(HOTKEY_OPEN_MENU, currKeysHeld, keysDown))
+    // with the guide on the bottom screen, touches scroll it; only its Menu button opens the menu
+    bool touchOpensMenu = (keysDown & KEY_TOUCH) != 0;
+    if (isInGame && guide3dsShown() && GPU3DS.profilingMode == PROFILING_OFF)
+        touchOpensMenu = guide3dsHandleTouch(keysDown, currKeysHeld, currentKeysUp);
+
+    if (touchOpensMenu || hotkeyPressed(HOTKEY_OPEN_MENU, currKeysHeld, keysDown))
     {
         if (isInGame)
         {
@@ -173,6 +179,14 @@ u32 input3dsScanInputForEmulation()
             GPU3DS.gameScreenBufferDesync = true;
             notif3dsTrigger(Notif::Misc, Notif::Type::Info, 1000,
                 settings3DS.StereoProfile ? "Depth profile B" : "Depth profile A");
+        }
+
+        if (hotkeyPressed(HOTKEY_TOGGLE_GUIDE, currKeysHeld, keysDown)) {
+            if (guide3dsUsable())
+                guide3dsSetShown(!guide3dsShown());
+            else
+                notif3dsTrigger(Notif::Misc, Notif::Type::Info, 1500,
+                    guide3dsAvailable() ? "Guide needs the game on the top screen" : "No guide for this game");
         }
 
         if (hotkeyPressed(HOTKEY_TOGGLE_3D_LAYERS, currKeysHeld, keysDown)) {

@@ -1694,6 +1694,11 @@ void menu3dsSetHotkeysData(const char* hotkeysData[HOTKEYS_COUNT][3]) {
                 hotkeysData[i][1]= "  Swap Depth Profile";
                 hotkeysData[i][2]= "Switches between this game's depth profiles A and B\n(Settings > 3D Layer Depth), e.g. overworld and battle.";
                 break;
+            case HOTKEY_TOGGLE_GUIDE:
+                hotkeysData[i][0]= "ToggleGuide";
+                hotkeysData[i][1]= "  Guide On/Off";
+                hotkeysData[i][2]= "Shows or hides this game's guide (<game>.txt next to\nthe game) on the bottom screen.";
+                break;
             case HOTKEY_TOGGLE_3D_LAYERS:
                 hotkeysData[i][0]= "Toggle3DLayers";
                 hotkeysData[i][1]= "  Per-Layer 3D On/Off";
