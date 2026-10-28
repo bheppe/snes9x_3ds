@@ -82,12 +82,18 @@ static void present()
         }
     }
     GSPGPU_FlushDataCache(fb, UI_W * UI_H * bpp);
+    // presents the buffer and, the first time, tells the LCD its pixel format
+    // (the menu and the GPU background leave a different one set)
+    gfxScreenSwapBuffers(GFX_BOTTOM, false);
 }
 
 void guide3dsBeginShowing()
 {
-    // single buffering, like the profiler's console: what is written shows directly
+    // single buffering, like the profiler's console: what is written shows directly.
+    // RGB565, the canvas' own format, so the copy needs no conversion.
     gfxSetDoubleBuffering(GFX_BOTTOM, false);
+    if (gfxGetScreenFormat(GFX_BOTTOM) != GSP_RGB565_OES)
+        gfxSetScreenFormat(GFX_BOTTOM, GSP_RGB565_OES);
     guide_draw();
     present();
 }

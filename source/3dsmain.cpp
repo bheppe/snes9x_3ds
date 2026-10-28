@@ -2654,6 +2654,10 @@ void updateProfilingOutput(int totalFrames)
 // the normal in-game bottom screen, drawn into both of its buffers
 static void drawSecondScreenBackground()
 {
+    // the guide switches the bottom screen to RGB565 and single buffering
+    GSPGPU_FramebufferFormat gpuBufFmt = (GSPGPU_FramebufferFormat)DISPLAY_TRANSFER_FMT;
+    if (gfxGetScreenFormat(settings3DS.SecondScreen) != gpuBufFmt)
+        gfxSetScreenFormat(settings3DS.SecondScreen, gpuBufFmt);
     gfxSetDoubleBuffering(settings3DS.SecondScreen, true);
     for (int pass = 0; pass < 2; pass++) {
         gpu3dsFrameBegin(C3D_FRAME_SYNCDRAW, false, true);
