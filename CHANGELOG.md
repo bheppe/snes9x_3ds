@@ -1,6 +1,12 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers7 (per-layer 3D fork, based on v1.61)
+
+### Changes
+* **Mode 7 floor tilt.** Perspective floors (F-Zero, Super Mario Kart, Pilotwings) now recede into the screen in 3D instead of sitting flat, and the sky stays behind them. New per-game setting under **Settings → 3D Layer Depth (this game)**: **Mode 7 Floor Tilt**, 0 to 8 (default 6, 0 = flat), saved as `StereoMode7Tilt` in the game config (config v1.8). With 3D off or the slider at 0 nothing changes. By hspman69 (#2).
+* **The picture fills the whole screen in 3D.** Per-layer 3D used to crop the sides of the picture; extra tile columns are now drawn at the edges instead. By hspman69 (#2).
+
 ## v1.61-layers6 (per-layer 3D fork, based on v1.61)
 
 ### Changes

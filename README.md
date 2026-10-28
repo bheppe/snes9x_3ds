@@ -11,6 +11,8 @@ Tested on Old 3DS.
 - **HOME Menu icons per game:** install **Icon Maker** (`iconmaker.cia`, on the Releases page) to put
   SNES (and GBA) games on the HOME Menu right from the 3DS. Each icon opens Snes9x 3D straight into its game.
   Your own pictures: `Game.png` (icon) and `Game.banner.png` (256x128 banner) next to the game.
+- **Mode 7 floor tilt:** racing and flying games with Mode 7 floors (F-Zero, Super Mario Kart, Pilotwings)
+  tilt back into the screen in 3D. Adjust per game with **Mode 7 Floor Tilt** (0-8) in the 3D settings.
 - **Sister project:** [gpSP 3D](https://github.com/bheppe/gpsp-3d), the same idea for GBA games
 - The 3D work is on the `per-layer-3d` branch. Everything below is the
   upstream readme by matbo87.
