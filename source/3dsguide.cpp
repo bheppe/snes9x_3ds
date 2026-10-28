@@ -94,6 +94,7 @@ void guide3dsBeginShowing()
     gfxSetDoubleBuffering(GFX_BOTTOM, false);
     if (gfxGetScreenFormat(GFX_BOTTOM) != GSP_RGB565_OES)
         gfxSetScreenFormat(GFX_BOTTOM, GSP_RGB565_OES);
+    guide_invalidate();
     guide_draw();
     present();
 }
@@ -111,6 +112,8 @@ bool guide3dsHandleTouch(u32 keysDown, u32 keysHeld, u32 keysUp)
         r = guide_touch(GUIDE_TOUCH_HELD, tp.px, tp.py);
     } else if (keysUp & KEY_TOUCH) {
         r = guide_touch(GUIDE_TOUCH_UP, 0, 0);
+    } else {
+        r = guide_tick();   // a flick keeps scrolling for a moment
     }
 
     if (r == GUIDE_MENU) {
