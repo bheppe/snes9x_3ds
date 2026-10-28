@@ -883,11 +883,22 @@ void impl3dsSceneRender(bool firstFrame, bool paused) {
     gameScreenViewport.sx1 = gameScreenViewport.sx0 + gameScreenViewport.sWidth;
     gameScreenViewport.sy1 = gameScreenViewport.sy0 + gameScreenViewport.cHeight;
 	
-    // Start half a pixel in from the edges so linear filtering can't leave a thin line
-    gameScreenViewport.tx0 = 0.5f;
-    gameScreenViewport.tx1 = static_cast<float>(GPU3DSExt.renderWidth) - 0.5f;
-    gameScreenViewport.ty0 = static_cast<float>(cropTopSource) + (cropTopSource == 0 ? 0.5f : 0.0f);
-    gameScreenViewport.ty1 = static_cast<float>(PPU.ScreenHeight - cropBottomSource) - (cropBottomSource == 0 ? 0.5f : 0.0f);
+    if (settings3DS.ScreenStretch == Setting::ScreenStretch::None && !overscanActive &&
+        gameScreenViewport.sWidth == SNES_WIDTH && gameScreenViewport.sHeight == PPU.ScreenHeight) {
+        // No Stretch: exactly one SNES pixel per screen pixel. The half-pixel inset below
+        // maps 255 texels onto 256 pixels, which (with the sharp filter No Stretch uses)
+        // drops a column and a row somewhere in the picture.
+        gameScreenViewport.tx0 = 0.0f;
+        gameScreenViewport.tx1 = static_cast<float>(GPU3DSExt.renderWidth);
+        gameScreenViewport.ty0 = static_cast<float>(cropTopSource);
+        gameScreenViewport.ty1 = static_cast<float>(PPU.ScreenHeight - cropBottomSource);
+    } else {
+        // Start half a pixel in from the edges so linear filtering can't leave a thin line
+        gameScreenViewport.tx0 = 0.5f;
+        gameScreenViewport.tx1 = static_cast<float>(GPU3DSExt.renderWidth) - 0.5f;
+        gameScreenViewport.ty0 = static_cast<float>(cropTopSource) + (cropTopSource == 0 ? 0.5f : 0.0f);
+        gameScreenViewport.ty1 = static_cast<float>(PPU.ScreenHeight - cropBottomSource) - (cropBottomSource == 0 ? 0.5f : 0.0f);
+    }
 
 	bool isFullScreen = gameScreenViewport.sWidth >= settings3DS.GameScreenWidth && gameScreenViewport.cHeight >= SCREEN_HEIGHT;
 	bool drawBackground = !isFullScreen;
