@@ -358,6 +358,8 @@ $(OUTPUT_FILE).3dsx : $(OUTPUT_FILE).elf $(_3DSXDEPS)
 
 $(OUTPUT_FILE).smdh : $(APP_ICON_IMAGE)
 	@$(SMDHTOOL) --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(APP_ICON_IMAGE) $@
+	@# flags: visible, allow 3D, record usage, extended (3D) banner
+	@printf '\045\001\000\000' | dd of=$@ bs=1 seek=8232 conv=notrunc status=none
 	@echo built ... $(notdir $@)
 
 $(OFILES_SOURCES) : $(HFILES)
