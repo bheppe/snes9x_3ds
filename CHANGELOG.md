@@ -1,6 +1,17 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers8 (per-layer 3D fork, based on v1.61)
+
+### Changes
+* **Hotkey combos.** Each hotkey can now be a two-button combo: SELECT with L / R / A / B / X / Y / the D-pad, START + L / R, L + R, and ZL + ZR on New 3DS. A combo fires when its last button is pressed, in either order, and its buttons are hidden from the game until released. Asked for by cabjoy.
+* **Two depth profiles per game.** **Settings → 3D Layer Depth → Depth Profile**: A or B, each with its own Depth Mode and depths (e.g. one for the overworld, one for battles in games that swap their layers, like EarthBound). The new **Swap Depth Profile** hotkey switches in game. A **Per-Layer 3D On/Off** hotkey compares with the flat 3D picture while you tune depths. Game config v1.9, global config v1.8; older configs start with B as a copy of their one profile. Asked for by Finn.
+* **No Stretch is true 1:1.** Without Overscan, one SNES pixel is now exactly one screen pixel (a column and a row used to be dropped). Reported by Finn.
+* **Guide viewer on the bottom screen**, like gpSP 3D's: a plain-text guide next to the game (`Game.txt`) or in `sdmc:/3ds/snes9x_3ds/guides/`, shown with **Show Guide on Bottom Screen** in the in-game menu or the new **Guide On/Off** hotkey. Drag or flick to scroll; it remembers your place per game. Asked for by cabjoy.
+* **Mario is Missing!** in the Recommended depth list (CRC32 and depths from SWChris).
+* **New app icon** (an "s9x" monogram, easy to tell apart from gpSP 3D), a **3D HOME Menu banner** (the icon on a turning tile, the name under it) and a soft chime instead of the startup sound. The app also allows 3D in its SMDH, which smdhtool left out.
+* bheppe is listed as an author on the HOME Menu and in FBI.
+
 ## v1.61-layers7 (per-layer 3D fork, based on v1.61)
 
 ### Changes
