@@ -25,7 +25,7 @@ Open the emulator menu, **Settings** tab, section **3D Layer Depth (this game)**
 - **Recommended** (default): fixed depths. Games in the built-in list (matched by ROM CRC32, see `stereoGameTable` in
   `source/3dsimpl_gpu.cpp`: ActRaiser USA, Yoshi's Island, Super Mario World, Super Mario All-Stars, Super Mario Kart,
   UN Squadron, Uniracers, Bill Laimbeer's Combat Basketball, Earthworm Jim 1 and 2, Aladdin, Goof Troop, Star Fox,
-  Star Fox 2 and The Legend of Zelda: A Link to the Past) use depths checked by hand; every other game gets a general preset
+  Star Fox 2, Mario is Missing! and The Legend of Zelda: A Link to the Past) use depths checked by hand; every other game gets a general preset
   (BG1 -1, BG2 -3, BG3 +3, BG4 -2, Sprites 0). BG1 sits one step behind the sprites so characters pop out of the
   play field. Sprites share one depth, so in some games characters can look slightly like they float; many games in the
   built-in list are at BG1 0 for that reason, and you can set BG1 to 0 in Manual for any other game.

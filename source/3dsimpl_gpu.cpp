@@ -369,6 +369,7 @@ static const StereoGameDepths stereoGameTable[] = {
     { 0x4AAFA462, {  1,  0,  3,  0, 1 } },   // Goof Troop
     { 0x8FC4E6D0, {  0, -4,  3,  0, 0 } },   // Star Fox
     { 0x87653732, { -5,  0,  0,  0, 2 } },   // Star Fox 2 (also starts with Crop Top/Bottom Scanlines 0, see 3dssettings.cpp)
+    { 0xE51A3FCD, { -2, -5,  0,  0, 0 } },   // Mario is Missing!
 
     // The Legend of Zelda: A Link to the Past changes which layer Link walks on from room to room, so no single
     // setting fits every scene. This is SWChris's setting for open scenes (no layers Link can walk under); rooms with
