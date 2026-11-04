@@ -54,23 +54,42 @@ and it fades in between, so a game zooming into a floor view does not jump. 0 tu
 
 ## Game notes
 Depths and notes for the built-in list come from SWChris, who tested them on a New 3DS XL.
-- **Super Mario All-Stars**: the Recommended depths (BG1 0, BG2 -4, BG3 -8, BG4 0, Sprites 0) suit Super Mario Bros 1, 2
-  and The Lost Levels. For Super Mario Bros 3 use Manual: BG1 0, BG2 -8, BG3 0, BG4 0, Sprites 0. Auto gets confused
-  in Super Mario Bros 3 because BG1 and BG3 are layered over each other.
-- **UN Squadron**: foreground elements share a layer with the background, so they look inverted.
-- **Earthworm Jim 2**: in the Lorenzo's Soil and ISO 9000 levels the game flips BG3's priority, so BG3 becomes the
-  foreground there and the depths look wrong. Separate depths for high and low priority tiles on each layer would
-  fix this and is on the list of ideas.
+- **Earthworm Jim 2**:
+  - In the Lorenzo's Soil and ISO 9000 levels the game uses tile priority for BG3, which that individual tiles on BG3 appear
+    in front of or behind Earthworm Jim depending on their priority level. Therefore the any settings will look wrong for these
+    levels. Separate depths for high and low priority tiles on each layer would fix this and is on the list of ideas.
+- **The Legend of Zelda: A Link to the Past**: This game uses its layers differently from room to room, so no single setting
+  fits every scene. Setting the Depth Mode to "Recommended" uses the settings from Setting A.
+  - Setting A, Open scenes with no layers Link can walk under, including rain/fog: BG1 1, BG2 0, BG3 3, BG4 0, Sprite 2, Mode 7 8. 
+  - Setting B, Link on a bridge, pedestal, or high wall, with a lower level below: BG1 -4, BG2 0, BG3 3, BG4 0, Sprite 1, Mode 7 8.
+  - Setting C, Link can walk under a bridge or overhang, or is on stairs: BG1 -4, BG2 0, BG3 3, BG4 0, Sprite -1.
+  - Set Mode 7 to 8.
+  - With any of these, sprites on the layer Link is not on will look indented into the ground, but Link looks right.
+  - Switching depths per scene would need three per-scene profiles, which this fork does not have yet.
 - **Star Fox 2**: the default Crop Top/Bottom Scanlines cut off the text boxes, so this game starts with both at 0
   (Settings tab, **Crop & Overscan**). A saved game config keeps whatever you set.
-- **The Legend of Zelda: A Link to the Past** uses its layers differently from room to room, so no single setting
-  fits every scene. The Recommended entry is Setting A, for open scenes with no layers Link can walk under (BG1 0,
-  BG2 0, BG3 +1, BG4 0, Sprites 0). For the other cases switch to Manual and use:
-  - Setting B, Link on a bridge or high wall: BG1 -2, BG2 0, BG3 +1, BG4 0, Sprites 0.
-  - Setting C, Link can walk under a bridge or overhang, or is on stairs: BG1 -2, BG2 0, BG3 +1, BG4 0, Sprites -1.
-  - Setting D, Master Sword glade: BG1 -2, BG2 0, BG3 +3, BG4 0, Sprites -1 (Sprites 0 while Link stands on the white platform).
-  - With any of these, sprites on the layer Link is not on look odd, but Link looks right. Switching depths per scene
-    would need per-scene profiles, which this fork does not have yet.
+- **Super Mario All-Stars**:
+  - Use the recommended setting for Profile A (Super Mario Bros 1, 2 and The Lost Levels): BG1 0, BG2 -4, BG3 -8, BG4 0, Sprite 0),
+  - Use these manual settings for Profile B (Super Mario Bros 3): BG1 0, BG2 -8, BG3 0, BG4 0, Sprite 0.
+  - Auto gets confused in Super Mario Bros 3 because BG1 and BG3 have duplicated elements that are layered on top of each other.
+- **Super Mario Kart**:
+  - Use the Recommended setting for Profile A (Races): BG1 0, BG2 2, BG3 -4, BG4 -8, Sprite 0
+  - Use the following manual settings for Profile B (Menus and results screens): BG1 0, BG2 -8, BG3 0, BG4 0, Sprite -4
+  - Set Mode 7 to 6
+- **Super Mario World 2: Yoshi's Island**:
+  - Use the recommended setting for Profile A (Levels): BG1 0, BG2 -4, BG3 3, BG4 0, Sprite 0
+  - Use the following manual settings for Profile B ("once upon a time" and credits cutscenes): BG1 -2, BG2 -8, BG3 0, BG4 2, Sprite -4
+  - Use Setting C for the title screen: BG1 0, BG2 4, BG3 -4, BG4 0, Sprite 0
+  - Use Setting D for the introductory "Yoshi meeting" cutscene: BG1 0, BG2 0, BG3 4, BG4 0, Sprite 0
+  - Set Mode 7 to 8 for the title screen, but 0 for everything else.
+- **Tiny Toon Adventures: Buster Busts Loose**:
+  - Use the Recommended setting for Profile A. A is used for the title screen, cutscenes, and screens with a background layer (Acme
+    Looniversity Hallway): BG1 -2, BG2 -5, BG3 3, BG4 0, Sprite 0
+  - Use the following manual settings for Profile B. B is used for screens with moving assets (Acme Looniversity Library): BG1 -2,
+    BG2 0, BG3 3, BG4 0, Sprite 0
+  - Set Mode 7 to 0
+- **UN Squadron**: Foreground elements share a layer with the background, so they look inverted.
+
 
 ## Adding a game to the Recommended list
 Open **Emulator** tab, **ROM Info**, note the CRC32. Add a line to `stereoGameTable` in
