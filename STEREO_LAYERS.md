@@ -54,10 +54,15 @@ and it fades in between, so a game zooming into a floor view does not jump. 0 tu
 
 ## Game notes
 Depths and notes for the built-in list come from SWChris, who tested them on a New 3DS XL.
+- **Earthbound**:
+  - Use the recommended setting for Profile A (BG1 -2, BG2 -2, BG3 2, BG4 -2, Sprite 0), which works for most things.
+  - Use the following settings for Profile B (BG1 2, BG2 0, BG3 -2, BG4 -2, Sprite 0), which works for boss fights.
 - **Earthworm Jim 2**:
   - In the Lorenzo's Soil and ISO 9000 levels the game uses tile priority for BG3, which that individual tiles on BG3 appear
     in front of or behind Earthworm Jim depending on their priority level. Therefore the any settings will look wrong for these
     levels. Separate depths for high and low priority tiles on each layer would fix this and is on the list of ideas.
+- **Final Fantasy II**: The opening castle level has an issue in the current build where the 3D does not work correctly, regardless
+  of the setting. The recommended settings should work on the vast majority of screens, however.    
 - **The Legend of Zelda: A Link to the Past**: This game uses its layers differently from room to room, so no single setting
   fits every scene. Setting the Depth Mode to "Recommended" uses the settings from Setting A.
   - Setting A, Open scenes with no layers Link can walk under, including rain/fog: BG1 1, BG2 0, BG3 3, BG4 0, Sprite 2, Mode 7 8. 
@@ -66,10 +71,16 @@ Depths and notes for the built-in list come from SWChris, who tested them on a N
   - Set Mode 7 to 8.
   - With any of these, sprites on the layer Link is not on will look indented into the ground, but Link looks right.
   - Switching depths per scene would need three per-scene profiles, which this fork does not have yet.
+- **Secret of Mana**: Set the Mode 7 setting to 8.
 - **Star Fox 2**: the default Crop Top/Bottom Scanlines cut off the text boxes, so this game starts with both at 0
   (Settings tab, **Crop & Overscan**). A saved game config keeps whatever you set.
+- **Street Fighter II: Turbo**:
+  - Use the recommended setting for Profile A (BG1 -4, BG2 -8, BG3 2, BG4 0, Sprite 0)
+  - Use these manual settings for the Japan stage (BG1 -2, BG2 -4, BG3 -8, BG4 0, Sprite 0)
+  - Use these manual settings for the Air Force USA stage (BG1 -4, BG2 -2, BG3 -8, BG4 0, Sprite 0)
+  - Use these manual settings for the Battle Harbor USA stage (BG1 -4, BG2 -2, BG3 1, BG4 0, Sprite 0)
 - **Super Mario All-Stars**:
-  - Use the recommended setting for Profile A (Super Mario Bros 1, 2 and The Lost Levels): BG1 0, BG2 -4, BG3 -8, BG4 0, Sprite 0),
+  - Use the recommended setting for Profile A (Super Mario Bros 1, 2 and The Lost Levels): BG1 0, BG2 -4, BG3 -8, BG4 0, Sprite 0).
   - Use these manual settings for Profile B (Super Mario Bros 3): BG1 0, BG2 -8, BG3 0, BG4 0, Sprite 0.
   - Auto gets confused in Super Mario Bros 3 because BG1 and BG3 have duplicated elements that are layered on top of each other.
 - **Super Mario Kart**:
