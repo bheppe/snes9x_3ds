@@ -350,32 +350,54 @@ struct StereoGameDepths {
 };
 
 static const StereoGameDepths stereoGameTable[] = {
-    { 0xEAC3358D, { -1, -4,  3, -2, 0 } },   // ActRaiser (USA)
-    // BG1 and sprites at the same depth so the characters do not float above the ground,
-    // BG2 -4 keeps the mountain layer from looking flat (CRC32s and depths from SWChris on r/3dshomebrew)
-    { 0x124D8E4D, { -1, -3,  3,  0, 0 } },   // Aladdin
-    { 0x468D8CD0, { -1, -1,  3,  0, 0 } },   // Bill Laimbeer's Combat Basketball
-	{ 0x1239A386, {  2, -2,  4,  0  0 } },	 // Chrono Trigger
-    { 0x3A4A47EB, {  0, -4, -8,  0, 1 } },   // Earthworm Jim
-    { 0x393DE197, {  0, -4, -8,  0, 0 } },   // Earthworm Jim 2 (BG3 has multiple tile layer priorities set in the Lorenzo's Soil and ISO 9000 levels, meaning
+	{ 0xEAC3358D, { -1, -4,  1, -2,  0 } },  // ActRaiser (USA)
+	{ 0x09097B2B, { -1, -4,  1, -2,  0 } },  // ActRaiser (Europe)
+	{ 0x29A78AF9, { -1, -4,  1, -2,  0 } },  // ActRaiser (Germany)
+    { 0x124D8E4D, { -1, -3,  3,  0,  0 } },  // Aladdin
+    { 0x468D8CD0, { -1, -1,  3,  0,  0 } },  // Bill Laimbeer's Combat Basketball
+	{ 0x1239A386, {  2, -2,  4,  0   0 } },	 // Chrono Trigger
+	{ 0xDC9BB451, { -2, -2,  2, -2,  0 } },	 // Earthbound (see STEREO_LAYERS.md, Game notes, for Profile B settings for boss fights)
+    { 0x3A4A47EB, {  0, -4, -8,  0,  1 } },  // Earthworm Jim
+    { 0x393DE197, {  0, -4, -8,  0,  0 } },  // Earthworm Jim 2 (BG3 has multiple tile layer priorities set in the Lorenzo's Soil and ISO 9000 levels, meaning
 											 // Jim will walk behind certain tiles on BG3 and in front of others on BG3 even though they're on the same layer)
-	{ 0xAA0E31DE, { -1, -5,  2, -2, 2 } },	 // F-Zero (USA) (Recommend setting the Mode 7 Floor Tilt setting to 8)
-    { 0x4AAFA462, {  1,  0,  3,  0, 1 } },   // Goof Troop
-    { 0x777AAC2F, {  1,  0,  3,  0, 2 } },   // The Legend of Zelda: A Link to the Past (The game changes which layer Link walks on from screen to screen, so no 
+	{ 0xAA0E31DE, { -1, -5,  2, -2,  2 } },	 // F-Zero (USA) (Recommend setting the Mode 7 Floor Tilt setting to 8)
+	{ 0x65D0A825, { -2, -4,  2,  0,  0 } },	 // Final Fantasy II (USA) (Set Mode 7 Floor Tilt to 8)
+	{ 0x23084FCD, { -2, -4,  2,  0,  0 } },	 // Final Fantasy II (USA) (Rev 1) (Set Mode 7 Floor Tilt to 8)
+	{ 0xA27F1C7A, { -2, -2,  0,  0, -1 } },  // Final Fantasy III (USA)
+	{ 0xC0FA0464, { -2, -2,  0,  0, -1 } },  // Final Fantasy III (USA) (Rev 1)
+    { 0x4AAFA462, {  1,  0,  3,  0,  1 } },  // Goof Troop
+    { 0x777AAC2F, {  1,  0,  3,  0,  2 } },  // The Legend of Zelda: A Link to the Past (The game changes which layer Link walks on from screen to screen, so no 
     										 // setting fits every scene. This is SWChris's setting for open scenes (no layers Link can walk under); rooms with
     										 // bridges, pits or stairs need other depths (see STEREO_LAYERS.md, Game notes).
-    { 0xE51A3FCD, { -2, -5,  0,  0, 0 } },   // Mario is Missing!
-    { 0x8FC4E6D0, {  0, -4,  3,  0, 0 } },   // Star Fox
-    { 0x87653732, { -5,  0,  0,  0, 2 } },   // Star Fox 2 (also starts with Crop Top/Bottom Scanlines 0, see 3dssettings.cpp)
-    { 0x925637C7, {  0, -4, -8,  0, 0 } },   // Super Mario All-Stars (the Super Mario Bros 1/2 and Lost Levels depths,
+    { 0xE51A3FCD, { -2, -5,  0,  0,  0 } },  // Mario is Missing!
+	{ 0x1033EBA4, { -1, -3,  3, -2,  0 } },	 // Mega Man X (USA) 
+	{ 0xDED53C64, { -1, -3,  3, -2,  0 } },	 // Mega Man X (USA) (Rev 1)
+	{ 0x41965122, { -1, -3,  3, -2,  0 } },	 // Mega Man X (Europe)
+	{ 0xD0176B24, { -2, -2,  1,  0,  0 } },	 // Secret of Mana
+    { 0x8FC4E6D0, {  0, -4,  3,  0,  0 } },  // Star Fox
+    { 0x87653732, { -5,  0,  0,  0,  2 } },  // Star Fox 2 (also starts with Crop Top/Bottom Scanlines 0, see 3dssettings.cpp)
+	{ 0xD43BC5A3, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (USA) (Rev 1) (Appropriate for most stages. See STEREO_LAYERS.md, Game notes, for settings
+											 // for the Japan, Air Force USA, and Battle Harbor USA stages.
+	{ 0xA45CADD6, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (USA) (See comment for USA Rev 1 version)
+	{ 0xB0553AA8, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (USA) (Rev 1) (Virtual Console) (See comment for USA Rev 1 version)
+	{ 0xA3EE22E5, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (Europe) (See comment for USA Rev 1 version)
+	{ 0xE15941C2, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (Europe) (Rev 1) (Virtual Console) (See comment for USA Rev 1 version)
+	{ 0x364087E5, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (Japan) (See comment for USA Rev 1 version)
+	{ 0x72D9ED8F, { -4, -8,  2,  0,  0 } },	 // Street Fighter II Turbo (Japan) (Rev 1) (Virtual Console) (See comment for USA Rev 1 version)
+    { 0x925637C7, {  0, -4, -8,  0,  0 } },  // Super Mario All-Stars (the Super Mario Bros 1/2 and Lost Levels depths,
                                              // they cover the most games; Super Mario Bros 3 looks best at BG2 -8, BG3 0)
-    { 0xCD80DB86, {  0,  2, -4, -8, 0 } },   // Super Mario Kart
-    { 0xB19ED489, {  0, -4,  3, -2, 0 } },   // Super Mario World
-	{ 0xE51A3FCD, {	-2, -5,  3,  0, 0 } },   // Tiny Toon Adventures: Buster Busts Loose (ideal usage is to force the game to use
+    { 0xCD80DB86, {  0,  2, -4, -8,  0 } },  // Super Mario Kart
+    { 0xB19ED489, {  0, -4,  3, -2,  0 } },  // Super Mario World
+    { 0xD138F224, {  0, -4,  3, -2,  0 } },  // Super Mario World 2: Yoshi's Island
+	{ 0xD63ED5F8, { -1, -8,  3,  0,  0 } },	 // Super Metroid (Japan, USA)
+	{ 0xE2F92F84, { -2, -8,  0,  0, -4 } },	 // Super Punch-Out!! (USA) 
+	{ 0xC6906F5F, { -2, -8,  0,  0, -4 } },	 // Super Punch-Out!! (Europe) 
+	{ 0x6C128210, {  0, -8,  1,  0   1 } },	 // Tetris Attack (USA)
+	{ 0x7417E838, {  0, -8,  1,  0   1 } },	 // Tetris Attack (Europe)
+	{ 0xE51A3FCD, {	-2, -5,  3,  0,  0 } },  // Tiny Toon Adventures: Buster Busts Loose (ideal usage is to force the game to use
 											 // Auto as it anticipates the layer changes on this game very well)
     { 0x383858C7, {  0, -8,  3,  0, 0 } },   // Uniracers
     { 0x231F0F67, { -3, -3,  3,  0, 0 } },   // UN Squadron (foreground elements share a layer with the background, so they look inverted)
-    { 0xD138F224, {  0, -4,  3, -2, 0 } },   // Yoshi's Island
 };
 
 // General preset, checked by hand on Donkey Kong Country, Secret of Mana and Super Metroid.
