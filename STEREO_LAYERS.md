@@ -61,8 +61,8 @@ Depths and notes for the built-in list come from SWChris, who tested them on a N
   - In the Lorenzo's Soil and ISO 9000 levels the game uses tile priority for BG3, which that individual tiles on BG3 appear
     in front of or behind Earthworm Jim depending on their priority level. Therefore the any settings will look wrong for these
     levels. Separate depths for high and low priority tiles on each layer would fix this and is on the list of ideas.
-- **Final Fantasy II**: The opening castle level has an issue in the current build where the 3D does not work correctly, regardless
-  of the setting. The recommended settings should work on the vast majority of screens, however.    
+- **Final Fantasy II**: the opening castle showed a double image with BG2 at any depth but 0 (layers blended with colour math
+  got a second shift). Fixed in layers9; the recommended settings should work on the vast majority of screens.
 - **The Legend of Zelda: A Link to the Past**: This game uses its layers differently from room to room, so no single setting
   fits every scene. Setting the Depth Mode to "Recommended" uses the settings from Setting A.
   - Setting A, Open scenes with no layers Link can walk under, including rain/fog: BG1 1, BG2 0, BG3 3, BG4 0, Sprite 2, Mode 7 8. 
