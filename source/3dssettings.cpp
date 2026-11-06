@@ -116,6 +116,7 @@ void settings3dsResetGameDefaults() {
     for (int i = 0; i < 5; i++)
         settings3DS.StereoAltLayerDepth[i] = settings3DS.StereoLayerDepth[i];
     settings3DS.StereoAltMode7Tilt = settings3DS.StereoMode7Tilt;
+    settings3DS.SuperFXFast = 0;
     settings3DS.Volume = settings3DS.GlobalVolume;
     settings3DS.MaxFrameSkips = 1;
     settings3DS.CurrentSaveSlot = 1;

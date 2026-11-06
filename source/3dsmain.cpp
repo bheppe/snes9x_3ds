@@ -1167,6 +1167,12 @@ void makeOptionMenu(std::vector<SMenuItem>& items, std::vector<SMenuTab>& menuTa
     AddMenuPicker(items, "  Frameskip"_s, "Try changing this if the game runs slow. Skipping frames helps it run faster, but less smooth."_s, 
         makePickerOptions({"Disabled", "Enabled (max 1 frame)", "Enabled (max 2 frames)", "Enabled (max 3 frames)", "Enabled (max 4 frames)"}), settings3DS.MaxFrameSkips, DIALOG_TYPE_INFO, true,
                   []( int val ) { CheckAndUpdate( settings3DS.MaxFrameSkips, val ); });
+
+    if (Settings.SuperFX) {
+        AddMenuPicker(items, "  Super FX Speed"_s, "Original: the Super FX chip runs at about its real speed (Star Fox at its own frame rate, speech in time). Fast: it finishes its work at once, so these games run faster than on a SNES."_s,
+            makePickerOptions({"Original", "Fast"}), settings3DS.SuperFXFast, DIALOG_TYPE_INFO, true,
+                      []( int val ) { CheckAndUpdate( settings3DS.SuperFXFast, val ); });
+    }
     
     AddMenuPicker(items, "  Framerate"_s, "PAL games run at 50 FPS by default.\nEnable 60 FPS override if needed."_s, makeOptionsForFrameRate(), static_cast<int>(settings3DS.Framerate), DIALOG_TYPE_INFO, true,
                   []( int val ) { CheckAndUpdate( settings3DS.Framerate, static_cast<Setting::Framerate>(val) ); });
@@ -1603,6 +1609,7 @@ bool settingsReadWriteFullListByGame(bool writeMode)
 
     if (writeMode || detectedConfigVersion >= 2.0f) {
         config3dsReadWriteInt32(stream, writeMode, "StereoAltMode7Tilt=%d\n", &settings3DS.StereoAltMode7Tilt, 0, 8);
+        config3dsReadWriteInt32(stream, writeMode, "SuperFXFast=%d\n", &settings3DS.SuperFXFast, 0, 1);
     } else {
         // before 2.0 both profiles shared one floor tilt
         settings3DS.StereoAltMode7Tilt = settings3DS.StereoMode7Tilt;

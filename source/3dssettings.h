@@ -196,6 +196,7 @@ typedef struct {
     int                 StereoAltDepthMode;     // the other profile's Depth Mode and depths (swapped in
     int                 StereoAltLayerDepth[5]; // by settings3dsSwapDepthProfile)
     int                 StereoAltMode7Tilt;     // the other profile's Mode 7 Floor Tilt
+    int                 SuperFXFast;            // per-game: 0 = Super FX at about its real speed, 1 = as fast as it can
 
     // --- GAME-SPECIFIC ---
     int                 MaxFrameSkips;          // 0 - disable,

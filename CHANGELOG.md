@@ -1,6 +1,15 @@
 # Changelog
 Notable changes to this project will be documented in this file.
 
+## v1.61-layers9 (per-layer 3D fork, based on v1.61)
+
+### Changes
+* **No more double image on blended layers.** When a game blends layers (SNES colour math: the sub screen laid over the main screen), the whole sub screen was moved a second time by the depth of the last layer drawn. That showed as a double image in Final Fantasy II's castle (set by BG2's depth) and Super Punch-Out!!'s HUD (BG3's). Only BG and sprite layers get a per-eye shift now. Reported by SWChris.
+* **Mode 7 Floor Tilt is part of the depth profile**, so profile A and B can each have their own (e.g. Super Mario Kart races and menus). Game config v2.0; older configs give profile B profile A's tilt. Asked for by SWChris.
+* **Super FX Speed** (Settings → Game-Specific Settings, Super FX games only): **Original** (the default) runs the chip at about its real speed, so Star Fox runs at its own frame rate and the intro speech finishes in time; **Fast** lets it finish its work at once, as before. Reported by SWChris.
+* While a layer's depth slider is selected in the menu, the paused game is shown without the dim and the pause text, so the layers are easier to judge. Asked for by Nukularkoffee.
+* More games in the Recommended list, from SWChris: ActRaiser (Europe, Germany), Chrono Trigger, EarthBound, F-Zero, Final Fantasy II and III, Mega Man X, Secret of Mana, Street Fighter II Turbo, Super Metroid, Super Punch-Out!!, Tetris Attack, and new depths for A Link to the Past and ActRaiser. Game notes for EarthBound, Street Fighter II Turbo, Super Mario Kart, Yoshi's Island, Tiny Toon Adventures and more in [STEREO_LAYERS.md](STEREO_LAYERS.md).
+
 ## v1.61-layers8 (per-layer 3D fork, based on v1.61)
 
 ### Changes

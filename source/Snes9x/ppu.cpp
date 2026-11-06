@@ -17,6 +17,7 @@
 
 #include "3dstimer.h"
 #include "3dsimpl.h"
+#include "3dssettings.h"
 
 #ifndef ZSNES_FX
 #include "fxemu.h"
@@ -3274,7 +3275,12 @@ void S9xSuperFXExec ()
 			(Memory.FillRAM [0x3000 + GSU_SCMR] & 0x18) == 0x18)
 		{
 			
-			if (!Settings.WinterGold||Settings.StarfoxHack)
+			// Super FX Speed (Settings tab), per game: Original gives the chip about as much
+			// work per line as the real one (Star Fox at its own ~20 fps, its intro speech
+			// in time); Fast lets it finish its whole job at once, so games run faster.
+			if (!settings3DS.SuperFXFast)
+				FxEmulate ((Memory.FillRAM [0x3000 + GSU_CLSR] & 1) ? SuperFX.speedPerLine * 2 : SuperFX.speedPerLine);
+			else if (!Settings.WinterGold||Settings.StarfoxHack)
 				FxEmulate (~0);
 			else
 				FxEmulate ((Memory.FillRAM [0x3000 + GSU_CLSR] & 1) ? 700 : 350); 
