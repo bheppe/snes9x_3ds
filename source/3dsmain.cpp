@@ -1601,6 +1601,13 @@ bool settingsReadWriteFullListByGame(bool writeMode)
             settings3DS.StereoAltLayerDepth[i] = settings3DS.StereoLayerDepth[i];
     }
 
+    if (writeMode || detectedConfigVersion >= 2.0f) {
+        config3dsReadWriteInt32(stream, writeMode, "StereoAltMode7Tilt=%d\n", &settings3DS.StereoAltMode7Tilt, 0, 8);
+    } else {
+        // before 2.0 both profiles shared one floor tilt
+        settings3DS.StereoAltMode7Tilt = settings3DS.StereoMode7Tilt;
+    }
+
     // skip reading new hotkey schema from older cfg files and map legacy key names in-place
     bool usesLegacyHotkeys = !writeMode && detectedConfigVersion < 1.3f;
     for (int i = 0; i < HOTKEYS_COUNT; ++i) {

@@ -705,6 +705,13 @@ void gpu3dsDrawLayers(SLayerList *list) {
     // draw window_lr into depth buffer first
     SLayer *layer = &list->layers[LAYER_WINDOW_LR];
 
+    // Only BG and sprite layers get a per-eye shift. Everything else (the window mask here, the
+    // backdrop, the colour math quad that lays the sub screen over the main screen, brightness)
+    // must be drawn unshifted: the shift is a shader uniform that stays set, and the colour math
+    // quad picking up the last layer's shift moved the whole sub screen a second time (a double
+    // image in FF2's castle and Super Punch-Out!!'s HUD, set by BG2 / BG3's depth).
+    stereoSetLayerShift(0.0f);
+
     if (layer->verticesByTarget[0]) {
         GPU3DS.currentRenderState.target = TARGET_SNES_DEPTH;
 
@@ -740,8 +747,7 @@ void gpu3dsDrawLayers(SLayerList *list) {
                 GPU3DS.appliedRenderState.textureEnv = TEX_ENV_UNSET;   // the tint colour changes per layer: re-apply the environment
             }
 
-            if (id < LAYER_BACKDROP)
-                stereoSetLayerShift(stereoEye != 0 ? stereoLayerShift(id, stereoEye > 0) : 0.0f);
+            stereoSetLayerShift(id < LAYER_BACKDROP && stereoEye != 0 ? stereoLayerShift(id, stereoEye > 0) : 0.0f);
 
             if (id < LAYER_BACKDROP) {
                 if (list->useDrawArraysForTiledLayers) {
@@ -759,6 +765,7 @@ void gpu3dsDrawLayers(SLayerList *list) {
         }
     }
 
+    stereoSetLayerShift(0.0f);   // nothing drawn after this (OSD, other passes) inherits a layer's shift
     stereoTintActive = false;
 }
 

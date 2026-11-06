@@ -790,7 +790,11 @@ static void impl3dsSceneRenderEye(bool firstFrame, bool paused, float pauseProgr
 
 		img3dsDrawGameOverlay(UI_OVERLAY, gameScreenViewport.sWidth, gameScreenViewport.cHeight);
 
-		if (paused) {
+		// While a layer's depth slider is selected in the menu, the paused frame is shown
+		// without the dim and the pause text, so the layers can be judged (Nukularkoffee).
+		bool layerPreview = settings3DS.StereoHighlightLayer >= 0 || settings3DS.StereoSoloLayer >= 0;
+
+		if (paused && !layerPreview) {
 			// dim overlay
 			u32 dimAlpha = (u32)(0xAA * pauseProgress + 0.5f);
 			gpu3dsAddQuadRect(0, 0, settings3DS.GameScreenWidth, SCREEN_HEIGHT, 0, 0, 0, dimAlpha);

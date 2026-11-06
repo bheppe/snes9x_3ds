@@ -195,6 +195,7 @@ typedef struct {
     int                 StereoProfile;          // per-game: which depth profile is in use, 0 = A, 1 = B
     int                 StereoAltDepthMode;     // the other profile's Depth Mode and depths (swapped in
     int                 StereoAltLayerDepth[5]; // by settings3dsSwapDepthProfile)
+    int                 StereoAltMode7Tilt;     // the other profile's Mode 7 Floor Tilt
 
     // --- GAME-SPECIFIC ---
     int                 MaxFrameSkips;          // 0 - disable,
